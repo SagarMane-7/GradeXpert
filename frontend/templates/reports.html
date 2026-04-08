@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Reports - Academic Result System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>ResultLedger</span>
+            </div>
+
+            <nav class="nav-links">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="upload.html" class="nav-item">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Upload Ledger</span>
+                </a>
+                <a href="history.html" class="nav-item">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>History</span>
+                </a>
+                <a href="analysis.html" class="nav-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Analysis</span>
+                </a>
+                <a href="failed.html" class="nav-item">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Failed Students</span>
+                </a>
+                <a href="subjects.html" class="nav-item">
+                    <i class="fa-solid fa-book"></i>
+                    <span>Subject Wise Analysis</span>
+                </a>
+                <a href="reports.html" class="nav-item active">
+                    <i class="fa-solid fa-file-invoice"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">T</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 0.9rem;">Lead Faculty</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Teaching Staff</div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-secondary);"></i>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h1>Download Reports</h1>
+                    <p class="text-secondary">Export data for administrative use.</p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px;">
+
+                <!-- 1. College Topper Report -->
+                <div class="card hover-lift">
+                    <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+                        <div style="width: 48px; height: 48px; background: rgba(0, 122, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 1.2rem;">
+                            <i class="fa-solid fa-file-excel"></i>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.1rem; margin-bottom: 4px;">College Topper Report</h3>
+                            <p class="text-secondary" style="font-size: 0.9rem;">Comprehensive list of top performing students across all branches.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <select id="sel-report-topper" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-family: inherit;">
+                            <option value="xlsx">Excel (.XLSX)</option>
+                        </select>
+                        <button id="btn-report-topper" class="btn btn-outline">Download</button>
+                    </div>
+                </div>
+
+                <!-- 2. Convert Ledger to Excel -->
+                <div class="card hover-lift">
+                    <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+                        <div style="width: 48px; height: 48px; background: rgba(52, 199, 89, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--success-color); font-size: 1.2rem;">
+                            <i class="fa-solid fa-file-csv"></i>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.1rem; margin-bottom: 4px;">Convert Ledger to Excel</h3>
+                            <p class="text-secondary" style="font-size: 0.9rem;">Raw data export of the processed PDF ledger.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="btn-report-csv" class="btn btn-outline" style="flex: 1; width: 100%;">Download .CSV</button>
+                    </div>
+                </div>
+
+                <!-- 3. Failed Students Report -->
+                <div class="card hover-lift">
+                    <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+                        <div style="width: 48px; height: 48px; background: rgba(255, 59, 48, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--danger-color); font-size: 1.2rem;">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.1rem; margin-bottom: 4px;">Failed Students Report</h3>
+                            <p class="text-secondary" style="font-size: 0.9rem;">List of engaged students with subject breakdown.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <select id="sel-report-failed" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-family: inherit;">
+                            <option value="pdf">PDF (.PDF)</option>
+                            <option value="xlsx">Excel (.XLSX)</option>
+                        </select>
+                        <button id="btn-report-failed" class="btn btn-outline">Download</button>
+                    </div>
+                </div>
+
+                <!-- 4. Subject Toppers -->
+                <div class="card hover-lift">
+                    <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+                        <div style="width: 48px; height: 48px; background: rgba(255, 149, 0, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--warning-color); font-size: 1.2rem;">
+                            <i class="fa-solid fa-chart-bar"></i>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.1rem; margin-bottom: 4px;">Subject Toppers</h3>
+                            <p class="text-secondary" style="font-size: 0.9rem;">Detailed subject-wise topper analytics.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <select id="sel-report-subject-topper" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-family: inherit;">
+                            <option value="xlsx">Excel (.XLSX)</option>
+                        </select>
+                        <button id="btn-report-subject-topper" class="btn btn-outline">Download</button>
+                    </div>
+                </div>
+
+                <!-- 5. Subject Wise Failed Students -->
+                <div class="card hover-lift">
+                    <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+                        <div style="width: 48px; height: 48px; background: rgba(255, 59, 48, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--danger-color); font-size: 1.2rem;">
+                            <i class="fa-solid fa-user-xmark"></i>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 1.1rem; margin-bottom: 4px;">Subject Wise Failed Students</h3>
+                            <p class="text-secondary" style="font-size: 0.9rem;">Isolated list of failed students categorized by subjects.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <select id="sel-report-subject-failed" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-family: inherit;">
+                            <option value="pdf">PDF (.PDF)</option>
+                        </select>
+                        <button id="btn-report-subject-failed" class="btn btn-outline">Download</button>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="assets/js/dots.js"></script>
+    <script src="assets/js/main.js"></script>
+</body>
+
+</html>

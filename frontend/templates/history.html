@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis History - Academic Result System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <script>
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</head>
+
+<body>
+
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>ResultLedger</span>
+            </div>
+
+            <nav class="nav-links">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="upload.html" class="nav-item">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Upload Ledger</span>
+                </a>
+                <a href="history.html" class="nav-item active">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>History</span>
+                </a>
+                <a href="analysis.html" class="nav-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Analysis</span>
+                </a>
+                <a href="failed.html" class="nav-item">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Failed Students</span>
+                </a>
+                <a href="subjects.html" class="nav-item">
+                    <i class="fa-solid fa-book"></i>
+                    <span>Subject Wise Analysis</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">A</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 0.9rem;">Admin User</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Administrator</div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-secondary);"></i>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h1>Ledger History</h1>
+                    <p class="text-secondary">View and analyze previously uploaded ledgers.</p>
+                </div>
+                <div>
+                    <button class="btn btn-danger"
+                        onclick="localStorage.removeItem('token'); window.location.href='index.html';">
+                        <i class="fa-solid fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">Previous Uploads</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Upload Date</th>
+                                <th>Filename</th>
+                                <th>Academic Year</th>
+                                <th>Semester</th>
+                                <th>Total Students</th>
+                                <th>Pass / Fail</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetchWithAuth('/history');
+                if (res && res.ok) {
+                    const data = await res.json();
+                    const tbody = document.getElementById('historyTableBody');
+                    tbody.innerHTML = '';
+
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No history found.</td></tr>';
+                        return;
+                    }
+
+                    data.forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${item.upload_date}</td>
+                            <td><i class="fa-solid fa-file-pdf" style="color:var(--danger-color); margin-right: 8px;"></i>${item.filename}</td>
+                            <td>${item.academic_year || 'N/A'}</td>
+                            <td>${item.semester || 'N/A'}</td>
+                            <td>${item.total_students}</td>
+                            <td><span style="color:var(--success-color); font-weight:600;">${item.pass_count} Pass</span> / <span style="color:var(--danger-color); font-weight:600;">${item.fail_count} Fail</span></td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="viewAnalysis(${item.id})">
+                                        <i class="fa-solid fa-chart-line" style="margin-right: 4px;"></i> View Analysis
+                                    </button>
+                                    <button class="btn btn-danger" style="padding: 6px 10px; font-size: 0.85rem; background-color: var(--danger-color); color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="deleteHistory(${item.id}, '${item.filename}')" title="Delete Ledger">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) {
+                console.error("Error fetching history:", err);
+            }
+        });
+
+        function viewAnalysis(uploadId) {
+            window.location.href = 'dashboard.html?upload_id=' + uploadId;
+        }
+
+        async function deleteHistory(uploadId, filename) {
+            if (confirm(`Are you sure you want to permanently delete the ledger history for: \n${filename}?`)) {
+                try {
+                    const res = await fetchWithAuth(`/history/${uploadId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (res && res.ok) {
+                        // Refresh the page
+                        window.location.reload();
+                    } else {
+                        const data = await res.json();
+                        alert('Error deleting item: ' + (data.error || 'Unknown error'));
+                    }
+                } catch (err) {
+                    console.error("Deletion error:", err);
+                    alert("Failed to delete history item.");
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subject Wise Analysis - Academic Result System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 900px;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        tr.clickable {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        tr.clickable:hover {
+            background-color: rgba(79, 70, 229, 0.05) !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>ResultLedger</span>
+            </div>
+
+            <nav class="nav-links">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="upload.html" class="nav-item">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Upload Ledger</span>
+                </a>
+                <a href="history.html" class="nav-item">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>History</span>
+                </a>
+                <a href="analysis.html" class="nav-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Analysis</span>
+                </a>
+                <a href="failed.html" class="nav-item">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Failed Students</span>
+                </a>
+                <a href="subjects.html" class="nav-item active">
+                    <i class="fa-solid fa-book"></i>
+                    <span>Subject Wise Analysis</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">A</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 0.9rem;">Admin User</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Administrator</div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-secondary);"></i>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h1>Subject Wise Analysis</h1>
+                    <p class="text-secondary">Detailed view of how students performed in each subject.</p>
+                </div>
+                <!-- Filter Dropdown -->
+                <div class="filter-group">
+                    <select id="subjectFilter" class="form-control"
+                        style="width: auto; padding: 10px 16px; font-weight: 500;" onchange="applySubjectFilter()">
+                        <option value="all">All Subjects</option>
+                        <option value="theory">Theory Only (Out of 100)</option>
+                        <option value="lab">Lab / Practical Only (Out of 50)</option>
+                        <option value="termwork">Termwork Only (Out of 25)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <!-- Subject Pass % Chart -->
+                <div class="card">
+                    <h3 style="margin-bottom: 20px;">Pass Percentage per Subject</h3>
+                    <div class="chart-container">
+                        <canvas id="subPassChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Subject Fail Count -->
+                <div class="card">
+                    <h3 style="margin-bottom: 20px;">Students Failed per Subject</h3>
+                    <div class="chart-container">
+                        <canvas id="subAvgChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject Details Table -->
+            <div class="card" style="margin-top: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">Subject Statistics</h3>
+                    <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.9rem;" onclick="window.downloadSubjectStatsCSV()">
+                        <i class="fa-solid fa-download"></i> Download Stats
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject Name</th>
+                                <th>Faculty In-Charge</th>
+                                <th>Pass %</th>
+                                <th>Fail Count</th>
+                                <th>Highest Marks</th>
+                                <th>Lowest Marks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subjectTableBody">
+                            <tr><td colspan="6" style="text-align:center; opacity:0.7;">Loading subject metrics...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Subjectwise Toppers Section -->
+            <div class="card" style="margin-top: 30px;">
+                <h3 style="margin-bottom: 20px;">Subjectwise Toppers</h3>
+                <p class="text-secondary" style="margin-bottom: 15px;">Select a category to view the available subjects and their toppers.</p>
+                <div class="filter-group" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+                    <select id="topperSelectFilter" class="form-control" style="width: auto; padding: 10px 16px; font-weight: 500;" onchange="applyTopperSelectFilter()">
+                        <option value="">-- Select Category --</option>
+                        <option value="theory">Theory Only</option>
+                        <option value="lab">Lab / Practical Only</option>
+                        <option value="termwork">Termwork</option>
+                    </select>
+                    <button id="downloadToppersBtn" class="btn btn-secondary" style="display: none; padding: 10px 16px;" onclick="window.downloadToppersCSV()">
+                        <i class="fa-solid fa-download"></i> Download CSV
+                    </button>
+                </div>
+                
+                <div class="table-container" id="toppersTableContainer" style="display: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject Name</th>
+                                <th>Out Of</th>
+                                <th>Topper Name</th>
+                                <th>Highest Marks</th>
+                                <th style="text-align: center;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topperTableBody">
+                            <!-- JS Populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Student Drill-down Modal -->
+            <div id="studentModal" class="modal-overlay" style="display: none;">
+                <div class="modal-content glass-card" style="max-height: 80vh; display: flex; flex-direction: column;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                        <div>
+                            <h2 id="modalSubjectName">Subject Name</h2>
+                            <p class="text-secondary" style="margin-bottom: 8px;">Student Performance Ranked</p>
+                            <div id="modalSubjectStats" style="font-weight: 500; font-size: 0.95rem;"></div>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: flex-start;">
+                            <button id="downloadSubjectFailedBtn" class="btn btn-secondary" style="padding: 8px 12px; display: none;">
+                                <i class="fa-solid fa-download"></i> Download Failed
+                            </button>
+                            <button onclick="closeModal()" class="btn btn-danger" style="padding: 8px 12px;"><i
+                                    class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <div class="table-container" style="overflow-y: auto; flex: 1;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>PRN Number</th>
+                                    <th>Seat No</th>
+                                    <th>Student Name</th>
+                                    <th>Branch</th>
+                                    <th>Marks</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalStudentBody">
+                                <!-- JS Populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/dots.js"></script>
+    <script src="assets/js/charts.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script>
+        // Global variables for instances
+        let passChart = null;
+        let avgChart = null;
+        let globalSubjectData = [];
+
+        window.applySubjectFilter = function () {
+            const filter = document.getElementById('subjectFilter').value;
+            let filteredData = globalSubjectData;
+
+            if (filter === 'theory') {
+                filteredData = globalSubjectData.filter(s => s.outof === 100);
+            } else if (filter === 'lab') {
+                filteredData = globalSubjectData.filter(s => s.outof === 50);
+            } else if (filter === 'termwork') {
+                filteredData = globalSubjectData.filter(s => s.outof === 25);
+            }
+            renderChartsAndTable(filteredData);
+        };
+
+        window.applyTopperSelectFilter = function() {
+            const filterOpt = document.getElementById('topperSelectFilter').value;
+            const container = document.getElementById('toppersTableContainer');
+            const tbody = document.getElementById('topperTableBody');
+            const downloadBtn = document.getElementById('downloadToppersBtn');
+            
+            if (!filterOpt) {
+                container.style.display = 'none';
+                if (downloadBtn) downloadBtn.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'block';
+            tbody.innerHTML = '';
+            
+            let filteredData = [];
+            if (filterOpt === 'theory') {
+                filteredData = globalSubjectData.filter(s => s.outof === 100);
+            } else if (filterOpt === 'lab') {
+                filteredData = globalSubjectData.filter(s => s.outof === 50);
+            } else if (filterOpt === 'termwork') {
+                filteredData = globalSubjectData.filter(s => s.outof === 25);
+            }
+            
+            if (filteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No subjects found for this category.</td></tr>';
+                if (downloadBtn) downloadBtn.style.display = 'none';
+                return;
+            }
+            
+            if (downloadBtn) downloadBtn.style.display = 'flex';
+            
+            filteredData.forEach(sub => {
+                let topperHtml = '-';
+                if (sub.topper && sub.topper !== '-') {
+                    const toppersList = sub.topper.split('<br>');
+                    topperHtml = `<div style="max-height: 95px; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 6px; padding: 4px;" class="custom-scrollbar">` +
+                        toppersList.map(t => `<span style="font-size: 0.8rem; padding: 4px 10px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 20px; color: #334155; font-weight: 500; display: inline-flex; align-items: center;"><i class="fa-solid fa-user-graduate" style="color: var(--primary-color); margin-right: 6px; font-size: 0.85rem;"></i>${t}</span>`).join('') +
+                        `</div>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: 500;">${sub.name}</td>
+                    <td><span class="badge" style="background:#555; color:white; font-size:10px;">${sub.outof}</span></td>
+                    <td style="width: 50%; padding-top: 8px; padding-bottom: 8px;">${topperHtml}</td>
+                    <td style="font-weight: 600;">${sub.highest !== undefined ? sub.highest : '-'}</td>
+                    <td style="text-align: center;">
+                        ${sub.highest !== undefined ? `
+                            <button onclick="downloadSingleSubjectToppersCSV('${sub.name.replace(/'/g, "\\'")}', '${sub.outof}', '${sub.highest}')" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-flex; justify-content: center; align-items: center; gap: 5px; background: var(--primary-color); border: none; color: white; cursor: pointer; transition: all 0.3s ease;" title="Download Subject Toppers" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
+                                <i class="fa-solid fa-download"></i>
+                            </button>
+                        ` : '-'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        window.downloadToppersCSV = function() {
+            const filterOpt = document.getElementById('topperSelectFilter').value;
+            if (!filterOpt) return;
+            
+            let filteredData = [];
+            let categoryName = "";
+            if (filterOpt === 'theory') {
+                filteredData = globalSubjectData.filter(s => s.outof === 100);
+                categoryName = "Theory";
+            } else if (filterOpt === 'lab') {
+                filteredData = globalSubjectData.filter(s => s.outof === 50);
+                categoryName = "Lab";
+            } else if (filterOpt === 'termwork') {
+                filteredData = globalSubjectData.filter(s => s.outof === 25);
+                categoryName = "Termwork";
+            }
+            
+            if (!filteredData || filteredData.length === 0) return;
+            
+            let csvContent = "Subject Name,Out Of,Topper Name,Highest Marks\n";
+            filteredData.forEach(sub => {
+                const subName = sub.name ? sub.name.replace(/"/g, '""') : '';
+                // Convert <br> to newline to properly display multiple toppers in a single Excel/CSV cell
+                const topper = sub.topper ? sub.topper.replace(/<br>/g, '\n').replace(/"/g, '""') : '';
+                const marks = sub.highest !== undefined ? sub.highest : '';
+                csvContent += `"${subName}","${sub.outof}","${topper}","${marks}"\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Subjectwise_Toppers_${categoryName}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        window.downloadSingleSubjectToppersCSV = async function(subjectName, outof, highestMarks) {
+            try {
+                const res = await fetch(`/api/analysis/subjects/students?subject=${encodeURIComponent(subjectName)}&outof=${outof}`, {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+                });
+                const students = await res.json();
+                
+                const toppers = students.filter(s => {
+                    if (s.marks === undefined) return false;
+                    const val = parseFloat(s.marks.toString().split('/')[0]);
+                    return val == parseFloat(highestMarks);
+                });
+                
+                if (toppers.length === 0) {
+                    alert("No toppers found for this subject.");
+                    return;
+                }
+
+                let csvContent = "Rank,PRN Number,Seat No,Student Name,Branch,Marks,Status\n";
+                toppers.forEach((s, index) => {
+                    const name = s.name ? s.name.replace(/"/g, '""') : '';
+                    const branch = s.branch ? s.branch.replace(/"/g, '""') : '';
+                    csvContent += `"1","${s.prn || ''}","${s.seat_no}","${name}","${branch}","${s.marks || ''}","${s.status}"\n`;
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", `${subjectName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_toppers.csv`);
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error("Error downloading toppers:", error);
+                alert("Failed to download toppers.");
+            }
+        };
+
+        window.downloadSubjectStatsCSV = function() {
+            if (!globalSubjectData || globalSubjectData.length === 0) {
+                alert("No data available to download.");
+                return;
+            }
+
+            const filter = document.getElementById('subjectFilter')?.value;
+            let dataToExport = globalSubjectData;
+            
+            if (filter === 'theory') {
+                dataToExport = globalSubjectData.filter(s => s.outof === 100);
+            } else if (filter === 'lab') {
+                dataToExport = globalSubjectData.filter(s => s.outof === 50);
+            } else if (filter === 'termwork') {
+                dataToExport = globalSubjectData.filter(s => s.outof === 25);
+            }
+
+            let csvContent = "Subject Name,Out Of,Pass Percentage,Fail Count,Highest Marks,Lowest Marks\n";
+            dataToExport.forEach(sub => {
+                const name = sub.name ? sub.name.replace(/"/g, '""') : '';
+                csvContent += `"${name}","${sub.outof}","${sub.pass}%","${sub.fail}","${sub.highest !== undefined ? sub.highest : '-'}","${sub.lowest !== undefined ? sub.lowest : '-'}"\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Subject_Statistics${filter ? '_' + filter : ''}.csv`);
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        window.downloadSingleSubjectAllStudentsCSV = async function(subjectName, outof) {
+            try {
+                // Fetch the complete student data for this subject
+                const res = await fetch(`/api/analysis/subjects/students?subject=${encodeURIComponent(subjectName)}&outof=${outof}`, {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+                });
+                if (!res.ok) throw new Error("Failed to fetch");
+                const students = await res.json();
+                
+                if (students.length === 0) {
+                    alert("No data found for this subject.");
+                    return;
+                }
+
+                let csvContent = "Rank,PRN Number,Seat No,Student Name,Branch,Marks,TW/PR Breakdown,Status\n";
+                students.forEach((s, index) => {
+                    const name = s.name ? s.name.replace(/"/g, '""') : '';
+                    const branch = s.branch ? s.branch.replace(/"/g, '""') : '';
+                    const tw_pr = s.tw_pr ? s.tw_pr.replace(/"/g, '""') : '';
+                    csvContent += `"${index + 1}","${s.prn || ''}","${s.seat_no}","${name}","${branch}","${s.marks || ''}","${tw_pr}","${s.status}"\n`;
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", `${subjectName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_detailed_data.csv`);
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error("Error downloading detailed data:", error);
+                alert("Failed to download detailed data.");
+            }
+        };
+
+        window.downloadSubjectFailedCSV = function(subject, failedStudents) {
+            let csvContent = "Rank,PRN Number,Seat No,Student Name,Branch,Marks,Status\n";
+            failedStudents.forEach((s, index) => {
+                const name = s.name ? s.name.replace(/"/g, '""') : '';
+                const branch = s.branch ? s.branch.replace(/"/g, '""') : '';
+                csvContent += `"${index + 1}","${s.prn || ''}","${s.seat_no}","${name}","${branch}","${s.marks || ''}","${s.status}"\n`;
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `${subject.replace(/[^a-zA-Z0-9]/g, '_')}_Failed_Students.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        window.openSubjectModal = async function (subjectName, outof = null) {
+            let title = subjectName;
+            if (outof) title += ' (Out of ' + outof + ')';
+            document.getElementById('modalSubjectName').innerText = title;
+            document.getElementById('modalStudentBody').innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading students...</td></tr>';
+            
+            const statsDiv = document.getElementById('modalSubjectStats');
+            if (statsDiv) statsDiv.innerHTML = '';
+            const downloadBtn = document.getElementById('downloadSubjectFailedBtn');
+            if (downloadBtn) downloadBtn.style.display = 'none';
+
+            document.getElementById('studentModal').style.display = 'flex';
+
+            try {
+                let url = `/analysis/subjects/students?subject=${encodeURIComponent(subjectName)}`;
+                if (outof) url += `&outof=${outof}`;
+                const res = await fetchWithAuth(url);
+                if (res && res.ok) {
+                    const students = await res.json();
+                    const tbody = document.getElementById('modalStudentBody');
+                    tbody.innerHTML = '';
+
+                    let passedCount = 0;
+                    let failedCount = 0;
+                    const failedStudents = [];
+                    
+                    students.forEach(s => {
+                        if (s.status && s.status.toLowerCase() === 'pass') {
+                            passedCount++;
+                        } else {
+                            failedCount++;
+                            failedStudents.push(s);
+                        }
+                    });
+
+                    const statsDiv = document.getElementById('modalSubjectStats');
+                    if (statsDiv) {
+                        statsDiv.innerHTML = `<span style="color: var(--success-color);"><i class="fa-solid fa-check-circle"></i> Passed: ${passedCount}</span> &nbsp;|&nbsp; <span style="color: var(--danger-color);"><i class="fa-solid fa-times-circle"></i> Failed: ${failedCount}</span>`;
+                    }
+
+                    const downloadBtn = document.getElementById('downloadSubjectFailedBtn');
+                    if (failedCount > 0 && downloadBtn) {
+                        downloadBtn.style.display = 'flex';
+                        downloadBtn.onclick = function() {
+                            window.downloadSubjectFailedCSV(subjectName, failedStudents);
+                        };
+                    }
+
+                    if (students.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No students found for this subject.</td></tr>';
+                        return;
+                    }
+
+                    students.forEach((s, index) => {
+                        let marksHtml = `<span style="font-weight: 600;">${s.marks || '-'}</span>`;
+                        
+                        if (s.tw_pr && outof === 50) {
+                            let componentsHtml = '';
+                            if (s.tw_pr.includes('|')) {
+                                let parts = s.tw_pr.split('|');
+                                componentsHtml = parts.map(p => {
+                                    let [label, val] = p.split(':');
+                                    if(val) {
+                                         return `<div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">${label.trim()}: <span style="font-weight: 600; color: #334155;">${val.trim()}</span></div>`;
+                                    }
+                                    return '';
+                                }).join('');
+                            } else if (s.tw_pr.includes(':')) {
+                                let [label, val] = s.tw_pr.split(':');
+                                if(val) {
+                                    componentsHtml = `<div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">${label.trim()}: <span style="font-weight: 600; color: #334155;">${val.trim()}</span></div>`;
+                                }
+                            }
+                            
+                            marksHtml = `
+                                <div style="display: flex; flex-direction: column;">
+                                    ${componentsHtml}
+                                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 4px; border-top: 1px dashed #cbd5e1; padding-top: 2px;">Total: <span style="font-weight: 700; color: #0f172a; font-size: 0.85rem;">${s.marks || '-'}</span></div>
+                                </div>
+                            `;
+                        }
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><span class="badge" style="background:#333; color:white;">#${index + 1}</span></td>
+                            <td class="text-secondary">${s.prn || '-'}</td>
+                            <td class="text-secondary">${s.seat_no}</td>
+                            <td style="font-weight: 500;">${s.name || '-'}</td>
+                            <td>${s.branch || '-'}</td>
+                            <td>${marksHtml}</td>
+                            <td><span class="badge ${s.status === 'Pass' ? 'badge-success' : 'badge-danger'}">${s.status}</span></td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        window.closeModal = function () {
+            document.getElementById('studentModal').style.display = 'none';
+        };
+
+        window.renderChartsAndTable = function (data) {
+            const tbody = document.getElementById('subjectTableBody');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No subject data found for this filter.</td></tr>';
+                if (passChart) passChart.destroy();
+                if (avgChart) avgChart.destroy();
+                return;
+            }
+
+            // Render table immediately for perceived speed
+            tbody.innerHTML = '';
+            data.forEach(sub => {
+                const tr = document.createElement('tr');
+                tr.className = 'clickable';
+                tr.onclick = function () { window.openSubjectModal(sub.name, sub.outof); };
+                tr.innerHTML = `
+                    <td style="font-weight: 500; display:flex; align-items:center;">
+                        <button class="btn" style="background:var(--card-bg); border:1px solid #cbd5e1; border-radius:6px; padding:4px 8px; color:#475569; cursor:pointer; margin-right: 12px; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);" onmouseover="this.style.background='#f1f5f9'; this.style.color='#0f172a';" onmouseout="this.style.background='var(--card-bg)'; this.style.color='#475569';" onclick="event.stopPropagation(); window.downloadSingleSubjectAllStudentsCSV('${sub.name.replace(/'/g, "\\'")}', ${sub.outof})" title="Download All Students for ${sub.name.replace(/'/g, "\\'")}">
+                            <i class="fa-solid fa-cloud-arrow-down" style="font-size: 1.1rem; color: #3b82f6;"></i>
+                        </button>
+                        ${sub.name} <span class="badge" style="background:#555; color:white; font-size:10px; margin-left: 8px;">Out of ${sub.outof}</span>
+                    </td>
+                    <td>-</td>
+                    <td style="color: ${sub.pass < 40 ? 'var(--danger-color)' : 'var(--success-color)'}; font-weight: 600;">${sub.pass}%</td>
+                    <td style="color: var(--danger-color);">${sub.fail}</td>
+                    <td style="font-weight: 600; color: var(--text-color);">${sub.highest !== undefined ? sub.highest : '-'}</td>
+                    <td style="font-weight: 600; color: var(--text-color);">${sub.lowest !== undefined ? sub.lowest : '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Truncate long labels for aesthetic x-axis
+            const truncateLabel = (lbl) => lbl.length > 20 ? lbl.substring(0, 20) + '...' : lbl;
+            const fullLabels = data.map(s => s.name);
+            const shortLabels = fullLabels.map(truncateLabel);
+
+            function setChartReady(id) {
+                const canvas = document.getElementById(id);
+                if (!canvas) return;
+                const wrapper = canvas.closest('.chart-container') || canvas.parentElement;
+                if (wrapper) wrapper.classList.add('ready');
+            }
+
+            requestAnimationFrame(() => {
+                // Chart 1: Pass %
+                const ctx1 = document.getElementById('subPassChart');
+                const passCtx = ctx1.getContext('2d');
+
+                const gradientPass = passCtx.createLinearGradient(0, 0, 0, 400);
+                gradientPass.addColorStop(0, 'rgba(16, 185, 129, 0.85)');
+                gradientPass.addColorStop(1, 'rgba(16, 185, 129, 0.1)');
+
+                const gradientWarn = passCtx.createLinearGradient(0, 0, 0, 400);
+                gradientWarn.addColorStop(0, 'rgba(244, 63, 94, 0.85)');
+                gradientWarn.addColorStop(1, 'rgba(244, 63, 94, 0.1)');
+
+                if (passChart) passChart.destroy();
+                passChart = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: shortLabels,
+                        datasets: [{
+                            label: 'Pass %',
+                            data: data.map(s => s.pass),
+                            backgroundColor: data.map(s => s.pass < 50 ? gradientWarn : gradientPass),
+                            borderColor: data.map(s => s.pass < 50 ? '#e11d48' : '#059669'),
+                            borderWidth: 1,
+                            borderRadius: 8,
+                            hoverBackgroundColor: data.map(s => s.pass < 50 ? '#be123c' : '#047857'),
+                            barPercentage: 0.6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 0 },
+                        layout: { padding: 0 },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                titleFont: { size: 14, family: "'Inter', sans-serif" },
+                                bodyFont: { size: 13, family: "'Inter', sans-serif" },
+                                padding: 12,
+                                cornerRadius: 8,
+                                displayColors: false,
+                                callbacks: {
+                                    title: function(context) { return fullLabels[context[0].dataIndex]; },
+                                    label: function(context) { return `Pass Rate: ${context.parsed.y}%`; }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { display: false },
+                                title: { display: true, text: 'SUBJECTS', color: '#64748b', font: { family: "'Inter', sans-serif", size: 12, weight: 600, letterSpacing: 1 }, padding: { top: 10 } }
+                            },
+                            y: { beginAtZero: true, max: 100, grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false }, ticks: { font: { family: "'Inter', sans-serif" }, color: '#64748b' } }
+                        }
+                    }
+                });
+                setChartReady('subPassChart');
+
+                // Chart 2: Fail Count
+                const ctx2 = document.getElementById('subAvgChart');
+                const failCtx = ctx2.getContext('2d');
+                const gradientFail = failCtx.createLinearGradient(0, 0, 0, 400);
+                gradientFail.addColorStop(0, 'rgba(249, 115, 22, 0.85)');
+                gradientFail.addColorStop(1, 'rgba(249, 115, 22, 0.1)');
+
+                if (avgChart) avgChart.destroy();
+                avgChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: shortLabels,
+                        datasets: [{
+                            label: 'Fail Count',
+                            data: data.map(s => s.fail),
+                            backgroundColor: gradientFail,
+                            borderColor: '#ea580c',
+                            borderWidth: 1,
+                            borderRadius: 8,
+                            hoverBackgroundColor: '#c2410c',
+                            barPercentage: 0.6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 0 },
+                        layout: { padding: 0 },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                titleFont: { size: 14, family: "'Inter', sans-serif" },
+                                bodyFont: { size: 13, family: "'Inter', sans-serif" },
+                                padding: 12,
+                                cornerRadius: 8,
+                                displayColors: false,
+                                callbacks: {
+                                    title: function(context) { return fullLabels[context[0].dataIndex]; },
+                                    label: function(context) {
+                                        const fails = context.parsed.y;
+                                        return fails === 1 ? `1 Student Failed` : `${fails} Students Failed`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: { display: false },
+                                title: { display: true, text: 'SUBJECTS', color: '#64748b', font: { family: "'Inter', sans-serif", size: 12, weight: 600, letterSpacing: 1 }, padding: { top: 10 } }
+                            },
+                            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false }, ticks: { stepSize: 1, font: { family: "'Inter', sans-serif" }, color: '#64748b' } }
+                        }
+                    }
+                });
+                setChartReady('subAvgChart');
+            });
+        };
+
+        window.initSubjectCharts = async function () {
+            try {
+                const res = await fetchWithAuth('/analysis/subjects');
+                if (!res) return;
+
+                globalSubjectData = await res.json();
+                renderChartsAndTable(globalSubjectData);
+            } catch (err) {
+                console.error("Error fetching subject data", err);
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.initSubjectCharts();
+        });
+    </script>
+</body>
+
+</html>

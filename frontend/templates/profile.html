@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Academic Result System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <style>
+        .profile-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            font-size: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        }
+
+        .profile-title {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .profile-role {
+            font-size: 1rem;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .profile-details {
+            text-align: left;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed #f0f0f0;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-value {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+    </style>
+    <script>
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</head>
+
+<body>
+
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>ResultLedger</span>
+            </div>
+
+            <nav class="nav-links">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="upload.html" class="nav-item">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Upload Ledger</span>
+                </a>
+                <a href="history.html" class="nav-item">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>History</span>
+                </a>
+                <a href="analysis.html" class="nav-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Analysis</span>
+                </a>
+                <a href="failed.html" class="nav-item">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Failed Students</span>
+                </a>
+                <a href="subjects.html" class="nav-item">
+                    <i class="fa-solid fa-book"></i>
+                    <span>Subject Wise Analysis</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">A</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 0.9rem;">Admin User</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Administrator</div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-secondary);"></i>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h1>User Profile</h1>
+                    <p class="text-secondary">View system account details.</p>
+                </div>
+                <div>
+                    <button class="btn btn-danger"
+                        onclick="localStorage.removeItem('token'); window.location.href='index.html';">
+                        <i class="fa-solid fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+            <div class="profile-container">
+                <div class="profile-avatar">
+                    <i class="fa-regular fa-user"></i>
+                </div>
+                <div class="profile-title" id="prof-username">Loading...</div>
+                <div class="profile-role" id="prof-role">Loading...</div>
+
+                <div class="profile-details">
+                    <div class="detail-row">
+                        <div class="detail-label"><i class="fa-solid fa-id-badge"></i> Account ID</div>
+                        <div class="detail-value" id="prof-id">-</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label"><i class="fa-solid fa-building-columns"></i> Assigned Branch</div>
+                        <div class="detail-value" id="prof-branch">-</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label"><i class="fa-solid fa-calendar-alt"></i> Account Created</div>
+                        <div class="detail-value" id="prof-created">-</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetchWithAuth('/auth/me');
+                if (res && res.ok) {
+                    const data = await res.json();
+
+                    // Update main profile box
+                    document.getElementById('prof-username').innerText = data.username.toUpperCase();
+                    document.getElementById('prof-role').innerText = data.role;
+                    document.getElementById('prof-id').innerText = data.id;
+                    document.getElementById('prof-branch').innerText = data.branch;
+                    document.getElementById('prof-created').innerText = data.created_at;
+
+                    // Update sidebar if we want to override main.js init (optional depending on load order)
+                    const sbUser = document.querySelector('.user-profile div:nth-child(2) div:first-child');
+                    if (sbUser) sbUser.innerText = data.username;
+                }
+            } catch (err) {
+                console.error("Error fetching profile info:", err);
+            }
+        });
+    </script>
+</body>
+
+</html>

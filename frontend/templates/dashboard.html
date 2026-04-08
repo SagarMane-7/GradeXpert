@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Academic Result System</title>
+    <!-- Use standard flask static paths if processed by template, but relative if direct. 
+         With static_url_path='/assets', 'assets/css/style.css' works if file is in static/css/style.css? 
+         No, 'assets/css/style.css' -> 'frontend/static/css/style.css'. 
+         My file is 'frontend/static/css/style.css'. So 'assets/css/style.css' is correct. -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Auth Check
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</head>
+
+<body>
+
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>ResultLedger</span>
+            </div>
+
+            <nav class="nav-links">
+                <a href="dashboard.html" class="nav-item active">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="upload.html" class="nav-item">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Upload Ledger</span>
+                </a>
+                <a href="history.html" class="nav-item">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>History</span>
+                </a>
+                <a href="analysis.html" class="nav-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Analysis</span>
+                </a>
+                <a href="failed.html" class="nav-item">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Failed Students</span>
+                </a>
+                <a href="subjects.html" class="nav-item">
+                    <i class="fa-solid fa-book"></i>
+                    <span>Subject Wise Analysis</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">A</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 0.9rem;">Admin User</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Administrator</div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-secondary);"></i>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div>
+                    <h1>Overview</h1>
+                    <p class="text-secondary">Welcome back, here's what's happening this semester.</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary"
+                        onclick="const p = new URLSearchParams(window.location.search); p.set('jwt', localStorage.getItem('token')); window.location.href='/api/report/download?' + p.toString()">
+                        <i class="fa-solid fa-download" style="margin-right: 8px;"></i> Download Report
+                    </button>
+                    <button class="btn btn-danger"
+                        onclick="localStorage.removeItem('token'); window.location.href='index.html';"
+                        style="margin-left: 10px;">
+                        <i class="fa-solid fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- Smart Insights Panel -->
+            <div class="glass-card insights-gradient" style="margin-bottom: 30px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <div class="ai-pulse" style="width: 12px; height: 12px; background: var(--primary-color); border-radius: 50%;"></div>
+                    <h3 style="color: var(--primary-dark); font-weight: 800; letter-spacing: 0.5px;"><i class="fa-solid fa-bolt" style="margin-right:5px;"></i> Smart Insights</h3>
+                </div>
+                <ul id="smartInsightsList" style="list-style: none; display: grid; gap: 12px; font-weight: 500; font-size: 0.95rem; color: #334155;">
+                    <li><i class="fa-solid fa-spinner fa-spin" style="margin-right: 10px; color: var(--primary-color);"></i> Generating AI-driven analysis...</li>
+                </ul>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="card stat-card">
+                    <div class="stat-label">TOTAL STUDENTS</div>
+                    <div class="stat-value" id="stat-total">0</div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="stat-label">PASS STUDENTS</div>
+                    <div class="stat-value" style="color: var(--success-color);">
+                        <span id="stat-pass-count">0</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="stat-label">FAIL STUDENTS</div>
+                    <div class="stat-value" style="color: var(--danger-color);">
+                        <span id="stat-failed">0</span>
+                    </div>
+                </div>
+
+                <div class="card stat-card">
+                    <div class="stat-label">OVERALL PASS PERCENTAGE</div>
+                    <div class="stat-value">
+                        <span id="stat-pass">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Top Performers Table -->
+            <div class="card" style="margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>Top Performers</h3>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Student Name</th>
+                                <th>Branch</th>
+                                <th>PRN Number</th>
+                                <th>Seat No</th>
+                                <th>Percentage/SGPA</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topStudentsTable">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <div class="card glass-card hover-glow">
+                    <h3 style="margin-bottom: 20px;">Performance Trend Analytics</h3>
+                    <div class="chart-container">
+                        <canvas id="performanceTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="card glass-card hover-glow">
+                    <h3 style="margin-bottom: 20px;">Overall Result Distribution</h3>
+                    <div class="chart-container">
+                        <canvas id="passFailChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject Difficulty & Failure Analysis -->
+            <div class="card glass-card hover-glow" style="margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h3>Subject Difficulty & Failure Analysis</h3>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid var(--danger-color);">
+                        <div style="font-size: 0.8rem; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">HARDEST SUBJECT (Lowest Avg)</div>
+                        <div id="hardestSubjectName" style="font-weight: 700; font-size: 1.1rem; color: var(--danger-color); margin-top: 8px;">-</div>
+                        <div id="hardestSubjectMarks" style="font-size: 0.85rem; color: #475569; margin-top: 4px; font-weight: 500;">-</div>
+                    </div>
+                    <div style="background: rgba(249, 115, 22, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #f97316;">
+                        <div style="font-size: 0.8rem; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">HIGHEST FAILURE RATE</div>
+                        <div id="highestFailureName" style="font-weight: 700; font-size: 1.1rem; color: #ea580c; margin-top: 8px;">-</div>
+                        <div id="highestFailureRate" style="font-size: 0.85rem; color: #475569; margin-top: 4px; font-weight: 500;">-</div>
+                    </div>
+                    <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid var(--success-color);">
+                        <div style="font-size: 0.8rem; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">AVG SUBJECT PASS RATE</div>
+                        <div id="diffOverallPass" style="font-weight: 700; font-size: 1.2rem; color: var(--success-color); margin-top: 8px;">-</div>
+                    </div>
+                </div>
+
+                <div class="chart-container" style="height: 380px;">
+                    <canvas id="subjectDifficultyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- At-Risk Students Section -->
+            <div class="card glass-card hover-glow" style="margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <h3>At-Risk & Critical Students</h3>
+                        <p class="text-secondary" style="font-size: 0.9rem; margin-top: 4px;">Identifying students requiring early intervention based on failed subjects and low percentages.</p>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div style="position: relative;">
+                            <i class="fa-solid fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                            <input type="text" id="atRiskSearch" placeholder="Search name or roll no..." class="form-control" style="width: 250px; padding: 10px 12px 10px 35px; border-radius: 6px; font-size: 0.9rem;" onkeyup="filterAtRiskTable()">
+                        </div>
+                        <button class="btn btn-secondary hover-glow" onclick="exportAtRiskCSV()" style="padding: 10px 15px;">
+                            <i class="fa-solid fa-file-export"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                    <table style="width: 100%;">
+                        <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+                            <tr>
+                                <th>Student Name</th>
+                                <th>PRN Number</th>
+                                <th>Roll Number</th>
+                                <th>Performance (Percentage)</th>
+                                <th>Failed Subjects</th>
+                                <th>Intervention Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="atRiskTableBody">
+                            <tr><td colspan="5" style="text-align: center; padding: 30px; color: #64748b;">Loading at-risk students...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Teacher Action Center -->
+            <div class="card glass-card hover-glow" style="margin-bottom: 30px; border-left: 4px solid var(--warning-color); background: linear-gradient(90deg, rgba(255,255,255,1) 0%, rgba(24ef,242,246,0.5) 100%);">
+                <div style="margin-bottom: 20px;">
+                    <h3><i class="fa-solid fa-bolt" style="color: var(--warning-color); margin-right: 8px;"></i> Teacher Action Center</h3>
+                    <p class="text-secondary" style="font-size: 0.9rem; margin-top: 4px;">Instantly trigger interventions based on the analytics above.</p>
+                </div>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <button class="btn hover-glow" onclick="openScheduleModal()" style="background: var(--primary-color); color: white; border-radius: 8px; padding: 10px 20px;">
+                        <i class="fa-solid fa-calendar-plus" style="margin-right: 8px;"></i> Schedule Extra Class
+                    </button>
+                    <button class="btn hover-glow" onclick="openScheduleModal()" style="background: var(--warning-color); color: white; border-radius: 8px; padding: 10px 20px;">
+                        <i class="fa-solid fa-envelope" style="margin-right: 8px;"></i> Notify At-Risk Students
+                    </button>
+                    <button class="btn btn-outline hover-glow" onclick="exportAtRiskCSV()" style="border-radius: 8px; padding: 10px 20px;">
+                        <i class="fa-solid fa-download" style="margin-right: 8px;"></i> Download Weak Students Report
+                    </button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Scheduling Modal -->
+    <div id="scheduleModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+        <div class="glass-card" style="background: white; padding: 30px; border-radius: 12px; width: 400px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative;">
+            <button onclick="closeScheduleModal()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: #64748b;"><i class="fa-solid fa-times"></i></button>
+            <h3 style="margin-bottom: 5px; color: var(--primary-dark);"><i class="fa-solid fa-calendar-plus" style="margin-right: 8px;"></i> Schedule Extra Class</h3>
+            <p class="text-secondary" style="font-size: 0.9rem; margin-bottom: 20px;">Provide session details to notify at-risk students.</p>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: 600; font-size: 0.9rem; color: #475569; display: block; margin-bottom: 5px;">Date</label>
+                <input type="date" id="scheduleDate" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: 600; font-size: 0.9rem; color: #475569; display: block; margin-bottom: 5px;">Time</label>
+                <input type="time" id="scheduleTime" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: 600; font-size: 0.9rem; color: #475569; display: block; margin-bottom: 5px;">Venue / Room</label>
+                <input type="text" id="scheduleVenue" placeholder="e.g. A-207 Classroom" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+                <label style="font-weight: 600; font-size: 0.9rem; color: #475569; display: block; margin-bottom: 5px;">Topic / Subject</label>
+                <input type="text" id="scheduleTopic" placeholder="e.g. Remedial Session - Basics" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            </div>
+            
+            <button id="btnSubmitSchedule" onclick="submitClassSchedule()" class="btn hover-glow" style="width: 100%; background: var(--primary-color); color: white; border-radius: 8px; padding: 12px; font-weight: 600;">
+                <i class="fa-solid fa-paper-plane" style="margin-right: 8px;"></i> Confirm & Send Invitations
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/dots.js"></script>
+    <script src="assets/js/charts.js"></script>
+    <script src="assets/js/main.js"></script>
+
+</body>
+
+</html>

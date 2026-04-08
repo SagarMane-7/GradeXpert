@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Dive Analysis - Academic Result System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+    <style>
+        /* Glassmorphism & Modern Aesthetic Overrides for Analysis Page */
+        body {
+            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .main-content {
+            padding: 2rem 3rem;
+            max-width: 1600px;
+            margin-left: var(--sidebar-width);
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+
+        .top-bar h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #1e3a8a, #4f46e5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .text-secondary {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        /* Filter Section */
+        .filter-glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 1);
+            border-radius: 16px;
+            padding: 1.25rem;
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #334155;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-group select {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: rgba(255, 255, 255, 0.9);
+            color: #1e293b;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .filter-group select:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        .btn-magic {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            white-space: nowrap;
+        }
+
+        .btn-magic:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.6);
+        }
+
+        /* Dashboard Grid */
+        .deep-analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 1);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px -5px rgba(99, 102, 241, 0.25);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .glass-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .glass-card h3 i {
+            color: #4f46e5;
+            background: rgba(79, 70, 229, 0.1);
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            flex: 1;
+            min-height: 300px;
+            width: 100%;
+        }
+
+        /* Specific Component Sizes */
+        .col-span-8 { grid-column: span 8; }
+        .col-span-4 { grid-column: span 4; }
+        .col-span-6 { grid-column: span 6; }
+        .col-span-12 { grid-column: span 12; }
+
+        @media (max-width: 1200px) {
+            .col-span-8, .col-span-4, .col-span-6 { grid-column: span 12; }
+            .filter-glass { flex-direction: column; align-items: stretch; }
+        }
+
+        /* Recommendations Section */
+        .recommendation-panel {
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.9) 0%, rgba(79, 70, 229, 0.9) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            margin-top: 2rem;
+            box-shadow: 0 15px 35px rgba(79, 70, 229, 0.3);
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .recommendation-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            animation: pulse 10s infinite linear;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .reco-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .reco-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .reco-list li {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 1.25rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .reco-list li:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(10px);
+        }
+
+        .reco-list li i {
+            font-size: 1.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .badge-danger {
+            background: #ef4444;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        
+        .badge-warning {
+            background: #f59e0b;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="layout">
+        <!-- Sidebar (Reused) -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>ResultLedger</span>
+            </div>
+
+            <nav class="nav-links">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="upload.html" class="nav-item">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Upload Ledger</span>
+                </a>
+                <a href="history.html" class="nav-item">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>History</span>
+                </a>
+                <a href="analysis.html" class="nav-item active">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Analysis</span>
+                </a>
+                <a href="failed.html" class="nav-item">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Failed Students</span>
+                </a>
+                <a href="subjects.html" class="nav-item">
+                    <i class="fa-solid fa-book"></i>
+                    <span>Subject Wise Analysis</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">A</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 0.9rem;">Admin User</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Administrator</div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-secondary);"></i>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h1>Analytical Deep-Dive</h1>
+                    <p class="text-secondary">Explore complex patterns, identify bottlenecks, and drive academic intervention.</p>
+                </div>
+                <!-- <div>
+                    <button class="btn btn-primary" onclick="window.print()">
+                        <i class="fa-solid fa-print" style="margin-right: 8px;"></i> Export PDF
+                    </button>
+                </div> -->
+            </div>
+
+
+            <!-- Row 1: Subject Contribution & Performance Bands -->
+            <div class="deep-analysis-grid">
+                <!-- 1. Subject Failure Contribution (Horizontal Bar) -->
+                <div class="glass-card col-span-8">
+                    <h3><i class="fa-solid fa-book-skull"></i> Subject Failure Contribution</h3>
+                    <p class="text-secondary" style="font-size: 0.85rem; margin-top: -0.5rem; margin-bottom: 1rem;">Identify which subjects are causing the highest number of failures.</p>
+                    <div class="chart-wrapper">
+                        <canvas id="subjectFailureChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 2. Performance Bands (Doughnut) -->
+                <div class="glass-card col-span-4">
+                    <h3><i class="fa-solid fa-layer-group"></i> Performance Bands</h3>
+                    <p class="text-secondary" style="font-size: 0.85rem; margin-top: -0.5rem; margin-bottom: 1rem;">Class spread mapping.</p>
+                    <div class="chart-wrapper">
+                        <canvas id="performanceBandsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Marks Histogram & Failed Students Pattern -->
+            <div class="deep-analysis-grid">
+                <!-- 3. Marks Distribution Histogram (Bar) -->
+                <div class="glass-card col-span-6">
+                    <h3><i class="fa-solid fa-chart-simple"></i> Marks Distribution Histogram</h3>
+                    <p class="text-secondary" style="font-size: 0.85rem; margin-top: -0.5rem; margin-bottom: 1rem;">How overall percentages are spread.</p>
+                    <div class="chart-wrapper">
+                        <canvas id="marksDistChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 5. Failed Students Pattern Analysis (Polar/Pie) -->
+                <div class="glass-card col-span-6">
+                    <h3><i class="fa-solid fa-triangle-exclamation"></i> Failure Severity Pattern</h3>
+                    <p class="text-secondary" style="font-size: 0.85rem; margin-top: -0.5rem; margin-bottom: 1rem;">Count of students failing multiple subjects.</p>
+                    <div class="chart-wrapper">
+                        <canvas id="failedPatternChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Subject Avg vs Pass % (Mixed Chart) -->
+            <div class="deep-analysis-grid">
+                <!-- 4. Subject-wise Avg vs Pass % -->
+                <div class="glass-card col-span-12">
+                    <h3><i class="fa-solid fa-scale-balanced"></i> Subject: Average Marks vs Pass Percentage</h3>
+                    <p class="text-secondary" style="font-size: 0.85rem; margin-top: -0.5rem; margin-bottom: 1rem;">Comparative analysis of overall class average vs passing rate.</p>
+                    <div class="chart-wrapper" style="min-height: 400px;">
+                        <canvas id="subjectAvgVsPassChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Recommendations Panel -->
+            <div class="recommendation-panel" id="aiRecommendations">
+                <div>
+                    <h2 class="reco-title">Smart Action Insights</h2>
+                    <p style="opacity: 0.8; font-size: 1.1rem; max-width: 90%;">Based on the current dataset, here are the targeted recommendations for faculty intervention.</p>
+                </div>
+                <ul class="reco-list" id="recoList">
+                    <li><i class="fa-solid fa-spinner fa-spin"></i> Generating recommendations...</li>
+                </ul>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const headers = { 'Authorization': 'Bearer ' + token };
+
+        // Chart instances
+        let charts = {};
+
+        Chart.defaults.font.family = "'Outfit', sans-serif";
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+        Chart.defaults.plugins.tooltip.padding = 12;
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+        async function initPage() {
+            await loadBranches();
+            loadDeepAnalysis();
+        }
+
+        async function loadBranches() {
+            // Function no longer needed since branch filter UI is removed
+            return;
+        }
+
+        async function loadDeepAnalysis() {
+            // Branch filter was removed, so we default to global
+            const query = '';
+
+            try {
+                // Fetch all raw data concurrently
+                const [subsRes, bandsRes, marksRes, patternRes] = await Promise.all([
+                    fetch(`/api/analysis/subjects${query}`, { headers }),
+                    fetch(`/api/analysis/performance-bands${query}`, { headers }),
+                    fetch(`/api/analysis/marks-distribution${query}`, { headers }),
+                    fetch(`/api/analysis/failed-pattern${query}`, { headers })
+                ]);
+
+                const subjects = await subsRes.json();
+                const bands = await bandsRes.json();
+                const marks = await marksRes.json();
+                const pattern = await patternRes.json();
+
+                renderSubjectFailureChart(subjects);
+                renderPerformanceBands(bands);
+                renderMarksDistribution(marks);
+                renderFailedPattern(pattern);
+                renderSubjectAvgVsPass(subjects);
+                generateRecommendations(subjects, pattern);
+
+            } catch (error) {
+                console.error("Deep analysis rendering error:", error);
+            }
+        }
+
+        function destroyChart(id) {
+            if (charts[id]) {
+                charts[id].destroy();
+            }
+        }
+
+        function setChartReady(id) {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+            const wrapper = canvas.closest('.chart-wrapper') || canvas.parentElement;
+            if (wrapper) wrapper.classList.add('ready');
+        }
+
+        // 1. Subject Failure Contribution (Horizontal Bar)
+        function renderSubjectFailureChart(subjects) {
+            // Sort subjects by highest fail count
+            const sorted = [...subjects].sort((a, b) => b.fail - a.fail).slice(0, 7); // Top 7 worst subjects
+            // Use full names, but if they are very long, break them into two lines for better rendering
+            const labels = sorted.map(s => {
+                if (s.name.length > 25) {
+                    const mid = Math.floor(s.name.length / 2);
+                    const spaceIdx = s.name.indexOf(' ', mid);
+                    if (spaceIdx !== -1) {
+                        return [s.name.substring(0, spaceIdx), s.name.substring(spaceIdx + 1)];
+                    }
+                }
+                return s.name;
+            });
+            const data = sorted.map(s => s.fail);
+
+            destroyChart('subjectFailureChart');
+            const ctx = document.getElementById('subjectFailureChart').getContext('2d');
+            
+            const gradient = ctx.createLinearGradient(0, 0, 400, 0);
+            gradient.addColorStop(0, '#f43f5e');
+            gradient.addColorStop(1, '#fb923c');
+
+            charts['subjectFailureChart'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Number of Failed Students',
+                        data: data,
+                        backgroundColor: gradient,
+                        borderRadius: 6,
+                        barThickness: 24
+                    }]
+                },
+                options: {
+                    animation: { duration: 0 },
+                    indexAxis: 'y', // Makes it horizontal
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    let label = context[0].label || context[0].chart.data.labels[context[0].dataIndex];
+                                    if (Array.isArray(label)) {
+                                        return label.join(' ');
+                                    }
+                                    return typeof label === 'string' ? label.replace(/,/g, ' ') : label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: true, color: 'rgba(0,0,0,0.05)' } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+            setChartReady('subjectFailureChart');
+        }
+
+        // 2. Performance Bands (Doughnut)
+        function renderPerformanceBands(bands) {
+            destroyChart('performanceBandsChart');
+            const ctx = document.getElementById('performanceBandsChart').getContext('2d');
+            
+            charts['performanceBandsChart'] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Above 80%', '60-80%', '40-60%', 'Below 40%'],
+                    datasets: [{
+                        data: [bands['Above 80%'], bands['60-80%'], bands['40-60%'], bands['Below 40%']],
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    animation: { duration: 0 },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 20 } }
+                    }
+                }
+            });
+            setChartReady('performanceBandsChart');
+        }
+
+        // 3. Marks Distribution Histogram (Bar)
+        function renderMarksDistribution(marks) {
+            destroyChart('marksDistChart');
+            const ctx = document.getElementById('marksDistChart').getContext('2d');
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, '#6366f1');
+            gradient.addColorStop(1, '#a855f7');
+
+            charts['marksDistChart'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'],
+                    datasets: [{
+                        label: 'Number of Students',
+                        data: [marks['0-20'], marks['21-40'], marks['41-60'], marks['61-80'], marks['81-100']],
+                        backgroundColor: gradient,
+                        borderRadius: 6,
+                        barPercentage: 0.9,
+                        categoryPercentage: 1.0 // Removes gap between bars to look like a histogram
+                    }]
+                },
+                options: {
+                    animation: { duration: 0 },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { grid: { color: 'rgba(0,0,0,0.05)' }, beginAtZero: true }
+                    }
+                }
+            });
+            setChartReady('marksDistChart');
+        }
+
+        // 5. Failed Students Pattern Analysis (Polar Area)
+        function renderFailedPattern(pattern) {
+            destroyChart('failedPatternChart');
+            const ctx = document.getElementById('failedPatternChart').getContext('2d');
+            
+            charts['failedPatternChart'] = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: ['Failed 1 Subject', 'Failed 2-3 Subjects', 'Failed 4+ Subjects'],
+                    datasets: [{
+                        data: [pattern['1 subject'], pattern['2-3 subjects'], pattern['4+ subjects']],
+                        backgroundColor: [
+                            'rgba(245, 158, 11, 0.7)', // Warning yellow
+                            'rgba(249, 115, 22, 0.7)', // Orange
+                            'rgba(239, 68, 68, 0.7)'   // Critical red
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    animation: { duration: 0 },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    },
+                    scales: {
+                        r: { ticks: { display: false } }
+                    }
+                }
+            });
+            setChartReady('failedPatternChart');
+        }
+
+        // 4. Subject-wise Average vs Pass % (Mixed Chart)
+        function renderSubjectAvgVsPass(subjects) {
+            // Sort subjects by pass percentage to make line chart readable
+            const sorted = [...subjects].sort((a, b) => a.pass - b.pass).slice(0, 10);
+            
+            // Format labels directly or break into multiple lines for x-axis fit
+            const labels = sorted.map(s => {
+                return s.name.split(' '); // Let Chart.js wrap by splitting on spaces naturally
+            });
+            
+            // Since max marks differs, we use Pass %
+            const passRates = sorted.map(s => s.pass);
+            
+            // To compare properly, we normalize average marks to percentage.
+            // Avg / Outof * 100
+            const avgAsPercentage = sorted.map(s => s.outof > 0 ? (s.avgMarks / s.outof * 100).toFixed(1) : 0);
+
+            destroyChart('subjectAvgVsPassChart');
+            const ctx = document.getElementById('subjectAvgVsPassChart').getContext('2d');
+            
+            charts['subjectAvgVsPassChart'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Pass Percentage (%)',
+                            data: passRates,
+                            borderColor: '#10b981',
+                            backgroundColor: '#10b981',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            yAxisID: 'y'
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Class Avg Marks (%)',
+                            data: avgAsPercentage,
+                            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                            borderColor: 'rgba(99, 102, 241, 1)',
+                            borderWidth: 2,
+                            borderRadius: 6,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    // If the label is an array (which it is for multi-line), join with space
+                                    let label = context[0].label || context[0].chart.data.labels[context[0].dataIndex];
+                                    if (Array.isArray(label)) {
+                                        return label.join(' ');
+                                    }
+                                    return typeof label === 'string' ? label.replace(/,/g, ' ') : label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            min: 0,
+                            max: 100,
+                            title: { display: true, text: 'Percentage (%)' }
+                        }
+                    }
+                }
+            });
+            setChartReady('subjectAvgVsPassChart');
+        }
+
+        // 6. Rules-based Recommendation Engine
+        function generateRecommendations(subjects, pattern) {
+            const ul = document.getElementById('recoList');
+            ul.innerHTML = '';
+            
+            // 1. Identify critical subjects
+            const worstSubject = [...subjects].sort((a, b) => b.fail - a.fail)[0];
+            if (worstSubject && worstSubject.fail > 0) {
+                ul.innerHTML += `
+                <li>
+                    <i class="fa-solid fa-triangle-exclamation" style="color: #fda4af;"></i>
+                    <div>
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">Remedial Focus Required</div>
+                        <div style="font-size: 0.95rem; opacity: 0.9;"><strong>${worstSubject.name}</strong> has a failure rate impacting ${worstSubject.fail} students. Schedule targeted remedial sessions for this specific subject.</div>
+                    </div>
+                </li>`;
+            }
+
+            // 2. Identify severely failing students
+            const criticalStudents = pattern['4+ subjects'];
+            if (criticalStudents > 0) {
+                ul.innerHTML += `
+                <li>
+                    <i class="fa-solid fa-users-slash" style="color: #fca5a5;"></i>
+                    <div>
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">Critical Interventions</div>
+                        <div style="font-size: 0.95rem; opacity: 0.9;">There are <strong>${criticalStudents}</strong> students failing in 4 or more subjects. Personal counseling and term-grant evaluation recommended immediately.</div>
+                    </div>
+                </li>`;
+            }
+
+            // 3. Excellent Subject Highlight
+            const perfectSubjects = subjects.filter(s => s.pass === 100);
+            if (perfectSubjects.length > 0) {
+                const namesHtml = perfectSubjects.map(s => `<span style="display:inline-block; font-size:0.85rem; padding:3px 8px; background:rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius:6px; margin-right:6px; margin-bottom:6px;">${s.name}</span>`).join('');
+                ul.innerHTML += `
+                <li>
+                    <i class="fa-solid fa-award" style="color: #fde047;"></i>
+                    <div style="width: 100%;">
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">Positive Insight</div>
+                        <div style="font-size: 0.95rem; opacity: 0.9; margin-bottom: 8px;">Excellent faculty performance with a <strong>100% pass rate</strong> in the following subjects. Share these teaching methodologies!</div>
+                        <div style="display: flex; flex-wrap: wrap; margin-top: 5px;">
+                            ${namesHtml}
+                        </div>
+                    </div>
+                </li>`;
+            } else {
+                const bestSubject = [...subjects].sort((a, b) => b.pass - a.pass)[0];
+                if (bestSubject && bestSubject.pass >= 90) {
+                    ul.innerHTML += `
+                    <li>
+                        <i class="fa-solid fa-award" style="color: #fde047;"></i>
+                        <div>
+                            <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem;">Positive Insight</div>
+                            <div style="font-size: 0.95rem; opacity: 0.9;">Excellent faculty performance in <strong>${bestSubject.name}</strong> with a ${bestSubject.pass}% pass rate. Share teaching methodologies from this department.</div>
+                        </div>
+                    </li>`;
+                }
+            }
+
+            if (ul.innerHTML === '') {
+                ul.innerHTML = `<li><i class="fa-solid fa-check"></i> <div>Performance is stable. No critical insights at this moment.</div></li>`;
+            }
+        }
+
+        initPage();
+
+    </script>
+</body>
+</html>

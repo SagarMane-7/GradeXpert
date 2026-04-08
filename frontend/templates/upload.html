@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Ledger - Academic Result System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+    <style>
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--card-radius);
+            padding: 60px 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.5);
+            transition: var(--hover-transition);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: var(--primary-color);
+            background: rgba(0, 122, 255, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            transition: var(--hover-transition);
+        }
+
+        .upload-area:hover .upload-icon {
+            color: var(--primary-color);
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>ResultLedger</span>
+            </div>
+
+            <nav class="nav-links">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="upload.html" class="nav-item active">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Upload Ledger</span>
+                </a>
+                <a href="history.html" class="nav-item">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>History</span>
+                </a>
+                <a href="analysis.html" class="nav-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Analysis</span>
+                </a>
+                <a href="failed.html" class="nav-item">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Failed Students</span>
+                </a>
+                <a href="subjects.html" class="nav-item">
+                    <i class="fa-solid fa-book"></i>
+                    <span>Subject Wise Analysis</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">A</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 0.9rem;">Admin User</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Administrator</div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-secondary);"></i>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h1>Import Ledger</h1>
+                    <p class="text-secondary">Upload the PDF ledger from university to process results.</p>
+                </div>
+            </div>
+
+            <div class="card" style="max-width: 800px; margin: 0 auto;">
+                <h3 style="margin-bottom: 24px;">Upload Configuration</h3>
+
+                <form action="#" onsubmit="event.preventDefault(); uploadLedger();">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                        <div class="form-group">
+                            <label class="form-label">Academic Year</label>
+                            <select class="form-control">
+                                <option>2025-2026</option>
+                                <option>2024-2025</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Semester</label>
+                            <select class="form-control">
+                                <option>Semester 1</option>
+                                <option>Semester 2</option>
+                                <option>Semester 3</option>
+                                <option>Semester 4</option>
+                                <option>Semester 5</option>
+                                <option>Semester 6</option>
+                                <option>Semester 7</option>
+                                <option>Semester 8</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="upload-area" id="dropZone">
+                        <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                        <h3 style="font-size: 1.2rem; margin-bottom: 8px;">Drag & Drop Ledger PDF</h3>
+                        <p class="text-secondary">or <span style="color: var(--primary-color); font-weight: 500;">browse
+                                files</span> from your computer</p>
+                        <input type="file" id="fileInput" accept=".pdf"
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+                    </div>
+
+                    <!-- Progress Simulator -->
+                    <div id="uploadProgress" style="display: none; margin-top: 30px;">
+                        <div
+                            style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">
+                            <span id="progressText">Processing...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div
+                            style="width: 100%; height: 8px; background: rgba(0,0,0,0.05); border-radius: 99px; overflow: hidden;">
+                            <div id="progressBar"
+                                style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.2s;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Success Message -->
+                    <div id="uploadSuccess"
+                        style="display: none; margin-top: 30px; background: rgba(52, 199, 89, 0.1); border: 1px solid rgba(52, 199, 89, 0.2); padding: 20px; border-radius: 12px; color: var(--success-color);">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <i class="fa-solid fa-circle-check" style="font-size: 1.5rem;"></i>
+                            <div style="font-weight: 600; font-size: 1.1rem;">Processing Complete!</div>
+                        </div>
+                        <p style="color: var(--text-primary); margin-bottom: 15px;">Successfully extracted data
+
+                        </p>
+                        <button class="btn btn-primary" style="font-size: 0.9rem;"
+                            onclick="window.location.href='/api/report/download?jwt=' + localStorage.getItem('token')">
+                            <i class="fa-solid fa-download" style="margin-right: 8px;"></i> Download Converted Excel
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 30px; text-align: right;">
+                        <button type="submit" class="btn btn-primary" id="uploadBtn">
+                            Process Ledger
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/dots.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script>
+        async function uploadLedger() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select a file first.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('ledger', file);
+
+            const progressContainer = document.getElementById('uploadProgress');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            const successMsg = document.getElementById('uploadSuccess');
+
+            // Reset UI
+            successMsg.style.display = 'none';
+            progressContainer.style.display = 'block';
+            uploadBtn.style.display = 'none';
+
+            try {
+                // Smooth Stepwise Progress Simulator
+                const stepProgress = [10, 30, 40, 55, 60, 80, 85, 90];
+                let stepIndex = 0;
+                
+                progressBar.style.width = '0%';
+                progressPercent.innerText = '0%';
+                document.getElementById('progressText').innerText = 'Initializing...';
+                
+                const progressInterval = setInterval(() => {
+                    if (stepIndex < stepProgress.length) {
+                        const val = stepProgress[stepIndex];
+                        progressBar.style.width = val + '%';
+                        progressPercent.innerText = val + '%';
+                        
+                        const textSteps = [
+                            "Uploading File...", 
+                            "Extracting Tables...", 
+                            "Applying Data Heuristics...", 
+                            "Validating Columns...", 
+                            "Aggregating Calculations...", 
+                            "Finalizing Output..."
+                        ];
+                        const textIdx = Math.min(Math.floor((stepIndex / stepProgress.length) * textSteps.length), textSteps.length - 1);
+                        document.getElementById('progressText').innerText = textSteps[textIdx];
+                        
+                        stepIndex++;
+                    }
+                }, 500); // Fast 500ms intervals so it feels snappy and quick
+
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                clearInterval(progressInterval);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    progressBar.style.width = '100%';
+                    progressPercent.innerText = '100%';
+                    document.getElementById('progressText').innerText = 'Done!';
+                    
+                    // CRITICAL FIX: Explicitly bind the global state to the newly inserted Database record.
+                    // This comprehensively resolves the stale data fetching issue.
+                    if (data.upload_id) {
+                        localStorage.setItem('currentUploadId', data.upload_id);
+                    } else {
+                        localStorage.removeItem('currentUploadId');
+                    }
+
+                    progressContainer.style.display = 'none';
+                    successMsg.style.display = 'block';
+                    
+                    successMsg.innerHTML = `
+                        <div style="text-align: center; padding: 25px;">
+                            <i class="fa-solid fa-wand-magic-sparkles fa-bounce" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 20px;"></i>
+                            <h3 style="color: var(--text-primary); font-size: 1.4rem; margin-bottom: 10px;">Ledger Synchronized & Converted!</h3>
+                            <p style="color: var(--text-secondary); margin-bottom: 25px;">The SPPU PDF has been transformed into an actionable analytics database.</p>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
+                                <div style="display: inline-flex; align-items: center; padding: 10px 20px; background: rgba(52, 199, 89, 0.1); border-radius: 99px; color: var(--success-color); font-weight: 500;">
+                                    <i class="fa-solid fa-file-excel" style="margin-right: 10px;"></i> Downloading Excel Output...
+                                </div>
+                                <div style="display: inline-flex; align-items: center; padding: 10px 20px; background: rgba(0, 122, 255, 0.1); border-radius: 99px; color: var(--primary-color); font-weight: 500;">
+                                    <i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 10px;"></i> Refreshing Global Dashboards...
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    successMsg.classList.add('fade-in');
+
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    let downloadUrl = '/api/report/download?jwt=' + token;
+                    if (data.upload_id) {
+                        downloadUrl += '&upload_id=' + data.upload_id;
+                    }
+                    iframe.src = downloadUrl;
+                    document.body.appendChild(iframe);
+
+                    window.location.href = 'dashboard.html?refresh=' + new Date().getTime();
+                } else {
+                    const errData = await response.json();
+                    throw new Error(errData.msg || errData.error || 'Upload failed');
+                }
+            } catch (error) {
+                console.error(error);
+                alert(`Error: ${error.message}`);
+                progressContainer.style.display = 'none';
+                uploadBtn.style.display = 'block';
+            }
+        }
+
+        // Drag and drop visuals
+        const dropZone = document.getElementById('dropZone');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function highlight(e) {
+            dropZone.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        const fileInput = document.getElementById('fileInput');
+        fileInput.addEventListener('change', function () {
+            handleFiles(this.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                fileInput.files = files; // Assign to input for form submission
+
+                // Update UI to show selected file
+                const fileName = files[0].name;
+                const uploadText = document.querySelector('#dropZone h3');
+                const uploadSubText = document.querySelector('#dropZone p');
+                const icon = document.querySelector('#dropZone .upload-icon');
+
+                uploadText.innerText = "File Selected";
+                uploadSubText.innerHTML = `<span style="color: var(--primary-color); font-weight: 600;">${fileName}</span>`;
+                icon.className = "fa-solid fa-file-pdf upload-icon";
+                icon.style.color = "var(--primary-color)";
+            }
+        }
+    </script>
+</body>
+
+</html>

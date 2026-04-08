@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Failed Students - Academic Result System</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>ResultLedger</span>
+            </div>
+
+            <nav class="nav-links">
+                <a href="dashboard.html" class="nav-item">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="upload.html" class="nav-item">
+                    <i class="fa-solid fa-upload"></i>
+                    <span>Upload Ledger</span>
+                </a>
+                <a href="history.html" class="nav-item">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>History</span>
+                </a>
+                <a href="analysis.html" class="nav-item">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Analysis</span>
+                </a>
+                <a href="failed.html" class="nav-item active">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Failed Students</span>
+                </a>
+                <a href="subjects.html" class="nav-item">
+                    <i class="fa-solid fa-book"></i>
+                    <span>Subject Wise Analysis</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <div class="avatar">A</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 0.9rem;">Admin User</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Administrator</div>
+                </div>
+                <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-secondary);"></i>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h1>Failed / ATKT List</h1>
+                    <p class="text-secondary">Students requiring remedial attention.</p>
+                </div>
+                <button class="btn btn-primary" style="background-color: var(--warning-color);"
+                    onclick="exportTableToCSV('Failed_Students.csv')">
+                    <i class="fa-solid fa-file-excel" style="margin-right: 8px;"></i> Export to Excel
+                </button>
+            </div>
+
+            <div class="card">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>PRN Number</th>
+                                <th>Seat No</th>
+                                <th>Student Name</th>
+                                <th>Branch</th>
+                                <th>Failed Subjects</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="failedTableBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Student Details Modal -->
+    <div id="studentModal" class="modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div class="modal-content card"
+            style="width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative;">
+            <button onclick="document.getElementById('studentModal').style.display='none'"
+                style="position: absolute; right: 20px; top: 20px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-color);">&times;</button>
+            <h2 id="modalStudentName" style="margin-bottom: 5px; padding-right: 30px;">Student Name</h2>
+            <p id="modalStudentDetails" class="text-secondary" style="margin-bottom: 20px; font-size: 0.9rem;"></p>
+
+            <table class="table" style="width: 100%; text-align: left; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 12px 10px; color: var(--text-secondary); font-weight: 600;">Subject</th>
+                        <th style="padding: 12px 10px; color: var(--text-secondary); font-weight: 600;">Marks (Grade)
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="modalSubjectsBody">
+                    <!-- JS Populated -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Scripts -->
+    <script src="assets/js/dots.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script>
+        async function viewStudent(seatNo) {
+            try {
+                const res = await fetchWithAuth(`/student/${seatNo}`);
+                if (!res) return;
+                const student = await res.json();
+
+                if (student.error) return alert(student.error);
+
+                document.getElementById('modalStudentName').textContent = student.name;
+                document.getElementById('modalStudentDetails').textContent = `PRN: ${student.prn || 'N/A'} | Seat No: ${student.seat_no} | Branch: ${student.branch || 'General'} | SGPA: ${student.sgpa || '0.00'} | Status: ${student.status}`;
+
+                const tbody = document.getElementById('modalSubjectsBody');
+                tbody.innerHTML = '';
+
+                const fixedCols = ['seat_no', 'name', 'mother_name', 'branch', 'prn', 'sgpa', 'status', 'calculated_grade', 'percentage'];
+
+                for (const [key, value] of Object.entries(student)) {
+                    if (!fixedCols.includes(key) && value !== '' && value !== null) {
+                        // Check if it's a fail condition (F or FF in string)
+                        const valStr = String(value);
+                        const isFail = valStr === 'F' || valStr === 'FF' || valStr.includes('(F)') || valStr.includes('(FF)');
+
+                        if (isFail) {
+                            const tr = document.createElement('tr');
+                            tr.style.borderBottom = '1px solid var(--border-color)';
+                            tr.innerHTML = `
+                                <td style="padding: 10px; font-weight: 500;">${key}</td>
+                                <td style="padding: 10px; font-weight: 600; color: var(--danger-color);">${valStr}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        }
+                    }
+                }
+
+                if (tbody.children.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding: 15px; color: var(--text-secondary);">No individual subjects failed. Student flagged for other reasons (e.g., Low SGPA).</td></tr>';
+                }
+
+                document.getElementById('studentModal').style.display = 'flex';
+
+            } catch (err) {
+                console.error(err);
+                alert('Error loading student data');
+            }
+        }
+
+        async function fetchAtRiskStudents() {
+            const tbody = document.getElementById('failedTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>';
+
+            try {
+                const res = await fetchWithAuth('/analytics/at-risk');
+                if (!res || !res.ok) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Error loading data</td></tr>';
+                    return;
+                }
+                const data = await res.json();
+
+                tbody.innerHTML = '';
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No At-Risk Students Found</td></tr>';
+                    return;
+                }
+
+                data.forEach(student => {
+                    const tr = document.createElement('tr');
+                    // Logic to show why at risk
+                    const reason = student.status === 'Fail' ? 'Failed Subjects' : 'Low SGPA';
+                    const badgeClass = student.status === 'Fail' ? 'badge-danger' : 'badge-warning';
+
+                    tr.innerHTML = `
+                        <td class="text-secondary">${student.prn || '-'}</td>
+                        <td class="text-secondary">${student.seat_no}</td>
+                        <td style="font-weight: 500;">${student.name}</td>
+                        <td>${student.branch || '-'}</td>
+                        <td><span class="badge ${badgeClass}">${reason}</span></td>
+                        <td style="font-weight: 600; color: var(--danger-color);">${student.sgpa || '0.00'}</td>
+                        <td>
+                            <button class="btn btn-outline" style="padding: 4px 12px; font-size: 0.8rem;" onclick="viewStudent('${student.seat_no}')">View</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (e) { console.error(e); }
+        }
+
+        function exportTableToCSV(filename) {
+            const rows = document.querySelectorAll("table tr");
+            let csv = [];
+            for (let i = 0; i < rows.length; i++) {
+                let row = [], cols = rows[i].querySelectorAll("td, th");
+                if (cols.length <= 1) continue;
+                for (let j = 0; j < cols.length - 1; j++) {
+                    let data = cols[j].innerText.replace(/"/g, '""');
+                    row.push('"' + data + '"');
+                }
+                csv.push(row.join(","));
+            }
+            const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+            const downloadLink = document.createElement("a");
+            downloadLink.download = filename;
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!localStorage.getItem('token')) window.location.href = 'index.html';
+            fetchAtRiskStudents();
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Portal Login</title>
+
+    <!-- Fonts and Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-base: #f8fafc;
+            --surface: rgba(255, 255, 255, 0.7);
+            --surface-border: rgba(255, 255, 255, 0.5);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Dynamic Animated Background */
+        .ambient-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.6;
+            animation: float 12s infinite ease-in-out alternate;
+        }
+
+        .blob-1 {
+            width: 500px;
+            height: 500px;
+            background: rgba(79, 70, 229, 0.4);
+            /* Indigo */
+            top: -150px;
+            left: -100px;
+        }
+
+        .blob-2 {
+            width: 400px;
+            height: 400px;
+            background: rgba(16, 185, 129, 0.25);
+            /* Emerald */
+            bottom: -100px;
+            right: -50px;
+            animation-delay: -6s;
+            animation-duration: 15s;
+        }
+
+        .blob-3 {
+            width: 300px;
+            height: 300px;
+            background: rgba(236, 72, 153, 0.25);
+            /* Pink */
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -3s;
+            animation-duration: 10s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(40px, 60px) scale(1.1);
+            }
+        }
+
+        /* Auth Container */
+        .auth-container {
+            width: 100%;
+            max-width: 440px;
+            padding: 24px;
+            z-index: 10;
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Glassmorphic Card */
+        .glass-card {
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 28px;
+            padding: 40px 36px;
+            /* Lighter shadow for light theme */
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Subtle Shine Reflection */
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transform: skewX(-20deg);
+            animation: shine 7s infinite;
+        }
+
+        @keyframes shine {
+            0% {
+                left: -100%;
+            }
+
+            20% {
+                left: 200%;
+            }
+
+            100% {
+                left: 200%;
+            }
+        }
+
+        /* Header Elements */
+        .brand-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .brand-icon-wrapper {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: white;
+            border: 1px solid rgba(79, 70, 229, 0.15);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.1);
+        }
+
+        .brand-icon {
+            font-size: 28px;
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-title {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .brand-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Input Fields */
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            transition: color 0.3s;
+            pointer-events: none;
+            font-size: 16px;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(15, 23, 42, 0.1);
+            padding: 16px 16px 16px 48px;
+            border-radius: 16px;
+            color: var(--text-main);
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+            background: white;
+        }
+
+        .form-control:focus+.input-icon,
+        .form-control:not(:placeholder-shown)+.input-icon {
+            color: var(--primary);
+        }
+
+        /* Button */
+        .btn-login {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), #3b82f6);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(79, 70, 229, 0.45);
+            background: linear-gradient(135deg, #4338ca, #2563eb);
+        }
+
+        .btn-login:active {
+            transform: translateY(1px);
+        }
+
+        /* Loader */
+        .loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Elegant Toast Notification */
+        .toast {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translate(-50%, -150%);
+            background: rgba(254, 226, 226, 0.9);
+            /* Light red glass */
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #b91c1c;
+            /* Deep red text */
+            padding: 14px 24px;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            z-index: 100;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0;
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.15);
+        }
+
+        .toast.show {
+            transform: translate(-50%, 0);
+            opacity: 1;
+        }
+
+        .toast-icon {
+            font-size: 18px;
+        }
+
+        .hint {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .hint span {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Animated Ambient Orbs -->
+    <div class="ambient-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="errorToast" class="toast">
+        <i class="fa-solid fa-triangle-exclamation toast-icon"></i>
+        <span id="errorMsgTxt">Authentication failed</span>
+    </div>
+
+    <div class="auth-container">
+        <div class="glass-card">
+
+            <div class="brand-header">
+                <div class="brand-icon-wrapper">
+                    <i class="fa-solid fa-graduation-cap brand-icon"></i>
+                </div>
+                <h1 class="brand-title">Academic Portal</h1>
+                <p class="brand-subtitle">Enter your credentials to access the ledger.</p>
+            </div>
+
+            <!-- Note: Using 'form' to capture 'Enter' key naturally -->
+            <form id="loginForm" onsubmit="handleLogin(event)">
+
+                <div class="input-group">
+                    <input type="text" id="username" class="form-control" placeholder="Username"
+                        autocomplete="username">
+                    <i class="fa-solid fa-user input-icon"></i>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" id="password" class="form-control" placeholder="Password"
+                        autocomplete="current-password">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <span id="btnText">Sign In</span>
+                    <i id="btnIcon" class="fa-solid fa-arrow-right-to-bracket"
+                        style="font-size: 14px; margin-left: 4px;"></i>
+                    <div class="loader" id="loader"></div>
+                </button>
+
+            </form>
+
+        </div>
+    </div>
+
+    <script>
+        async function handleLogin(e) {
+            e.preventDefault(); // Prevent page reload
+
+            const usernameInput = document.getElementById("username");
+            const passwordInput = document.getElementById("password");
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!username || !password) {
+                showToast("Please enter both username and password.");
+                usernameInput.focus();
+                return;
+            }
+
+            // Element References
+            const btnText = document.getElementById("btnText");
+            const btnIcon = document.getElementById("btnIcon");
+            const loader = document.getElementById("loader");
+            const loginBtn = document.getElementById("loginBtn");
+
+            // UI Loading State
+            loginBtn.disabled = true;
+            btnText.style.display = "none";
+            btnIcon.style.display = "none";
+            loader.style.display = "block";
+
+            try {
+                const res = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showToast(data.error || "Invalid credentials provided.");
+                    resetBtnState();
+                    return;
+                }
+
+                // Success! Store JWT & Metadata
+                localStorage.setItem("token", data.access_token);
+                localStorage.setItem("role", data.role);
+                localStorage.setItem("username", username);
+
+                // Navigate immediately without delay
+                window.location.href = "dashboard.html";
+
+            } catch (err) {
+                console.error("Auth Error:", err);
+                showToast("Server connection error. Is the backend running?");
+                resetBtnState();
+            }
+
+            function resetBtnState() {
+                loginBtn.disabled = false;
+                btnText.style.display = "inline";
+                btnIcon.style.display = "inline";
+                loader.style.display = "none";
+                passwordInput.value = ""; // Clear password securely on fail
+                passwordInput.focus();
+            }
+        }
+
+        let toastTimeout;
+        function showToast(msg) {
+            const toast = document.getElementById("errorToast");
+            document.getElementById("errorMsgTxt").innerText = msg;
+
+            // Clear existing timers to prevent clipping
+            clearTimeout(toastTimeout);
+
+            toast.classList.add("show");
+
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove("show");
+            }, 1200);
+        }
+
+    </script>
+
+</body>
+
+</html>

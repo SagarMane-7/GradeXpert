@@ -162,7 +162,7 @@
 
                         </p>
                         <button class="btn btn-primary" style="font-size: 0.9rem;"
-                            onclick="window.location.href='/api/report/download?jwt=' + localStorage.getItem('token')">
+                            onclick="window.location.href=`${BASE_URL}/api/report/download?jwt=` + localStorage.getItem('token')">
                             <i class="fa-solid fa-download" style="margin-right: 8px;"></i> Download Converted Excel
                         </button>
                     </div>
@@ -235,7 +235,7 @@
                 }, 500); // Fast 500ms intervals so it feels snappy and quick
 
                 const token = localStorage.getItem('token');
-                const response = await fetch('/api/upload', {
+                const response = await fetch(`${BASE_URL}/api/upload`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -283,7 +283,7 @@
 
                     const iframe = document.createElement('iframe');
                     iframe.style.display = 'none';
-                    let downloadUrl = '/api/report/download?jwt=' + token;
+                    let downloadUrl = `${BASE_URL}/api/report/download?jwt=` + token;
                     if (data.upload_id) {
                         downloadUrl += '&upload_id=' + data.upload_id;
                     }

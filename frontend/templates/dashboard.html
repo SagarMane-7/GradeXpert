@@ -82,7 +82,7 @@
                 </div>
                 <div>
                     <button class="btn btn-primary"
-                        onclick="const p = new URLSearchParams(window.location.search); p.set('jwt', localStorage.getItem('token')); window.location.href='/api/report/download?' + p.toString()">
+                        onclick="const p = new URLSearchParams(window.location.search); p.set('jwt', localStorage.getItem('token')); window.location.href=`${BASE_URL}/api/report/download?` + p.toString()">
                         <i class="fa-solid fa-download" style="margin-right: 8px;"></i> Download Report
                     </button>
                     <button class="btn btn-danger"

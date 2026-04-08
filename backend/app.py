@@ -1076,12 +1076,4 @@ if __name__ == '__main__':
 
     print("Starting RESULT LEDGER Flask server...")
     
-    # For production on Render, use environment PORT. For local dev, use 5000
-    port = int(os.getenv('PORT', 5000))
-    host = '0.0.0.0'  # Listen on all interfaces for production
-    debug_mode = os.getenv('FLASK_ENV', 'development') == 'development'
-    
-    if debug_mode:
-        print("Open this URL in your browser: http://127.0.0.1:5000")
-    
-    app.run(debug=debug_mode, host=host, port=port)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))

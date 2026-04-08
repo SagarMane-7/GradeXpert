@@ -394,6 +394,7 @@
     </div>
 
     <script>
+        const BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" ? "http://127.0.0.1:10000" : "https://gradexpert.onrender.com";
         async function handleLogin(e) {
             e.preventDefault(); // Prevent page reload
 
@@ -421,7 +422,7 @@
             loader.style.display = "block";
 
             try {
-                const res = await fetch("/api/auth/login", {
+                const res = await fetch(`${BASE_URL}/api/auth/login`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ username, password })

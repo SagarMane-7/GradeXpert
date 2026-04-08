@@ -1,6 +1,7 @@
 // main.js - Production Grade Frontend Logic
 
-const API_BASE = window.location.protocol === 'file:' ? 'http://127.0.0.1:5000/api' : '/api';
+const BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" ? "http://127.0.0.1:10000" : "https://gradexpert.onrender.com";
+const API_BASE = `${BASE_URL}/api`;
 
 const urlParams = new URLSearchParams(window.location.search);
 let currentUploadId = urlParams.get('upload_id');

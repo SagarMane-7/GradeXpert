@@ -53,6 +53,14 @@ app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
 db.init_app(app)
 
+# Auto-initialize database tables and default admin when starting
+with app.app_context():
+    db.create_all()
+    try:
+        init_db()
+    except Exception as e:
+        print(f"Error during DB initialization: {e}")
+
 # --- Global Data Storage (In-memory/File-based for Demo) ---
 LATEST_DATA_PATH = os.path.join(app.config['GENERATED_FOLDER'], 'latest_report.xlsx')
 

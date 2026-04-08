@@ -133,6 +133,18 @@ def serve_static_pages(filename):
         return render_template(filename)
     return f"File not found: {filename}", 404
 
+from werkzeug.exceptions import HTTPException
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # Pass through HTTP errors
+    if isinstance(e, HTTPException):
+        return jsonify({"error": e.description}), e.code
+    
+    # Handle non-HTTP exceptions
+    traceback.print_exc()
+    return jsonify({"error": "An unexpected internal server error occurred.", "details": str(e)}), 500
+
 # --- API Endpoints ---
 
 @app.route('/api/upload', methods=['POST'])
@@ -147,9 +159,10 @@ def upload_ledger():
     
     if file:
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-        file.save(filepath)
         
         try:
+            file.save(filepath)
+            
             # 1. Parse PDF
             students = parse_sppu_ledger(filepath)
             

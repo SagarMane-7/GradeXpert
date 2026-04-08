@@ -1,4 +1,4 @@
-#!D:\frontend sppu - Copy (2)\.venv\Scripts\python.exe
+#!D:\Insightix\.venv\Scripts\python.exe
 """Extract pdf structure in XML format"""
 
 import logging

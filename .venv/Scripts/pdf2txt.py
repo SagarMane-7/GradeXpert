@@ -1,4 +1,4 @@
-#!D:\frontend sppu - Copy (2)\.venv\Scripts\python.exe
+#!D:\Insightix\.venv\Scripts\python.exe
 """A command line tool for extracting text and images from PDF and
 output it to plain text, html, xml or tags.
 """

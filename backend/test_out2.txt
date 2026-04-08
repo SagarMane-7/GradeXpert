@@ -1,0 +1,12 @@
+LINE: 2303101 * Signals and Systems 56/60 3/5 15/15 20/20 --- --- --- 94/100 94 3 O 10 30
+NEXT1: 2303101 * Signals and Systems --- --- --- --- 21/25 24/25 --- 45/50 90 1 A+ 9 9
+NEXT2: 2303102 * Analog Circuit Design 45/60 4/5 13/15 20/20 --- --- --- 82/100 82 3 A+ 9 27
+LINE: 2303101 * Signals and Systems --- --- --- --- 21/25 24/25 --- 45/50 90 1 A+ 9 9
+NEXT1: 2303102 * Analog Circuit Design 45/60 4/5 13/15 20/20 --- --- --- 82/100 82 3 A+ 9 27
+NEXT2: 2303203 * Analog Circuit Design --- --- --- --- --- 24/25 20/25 44/50 88 1 A+ 9 9
+LINE: 2303102 * Analog Circuit Design 45/60 4/5 13/15 20/20 --- --- --- 82/100 82 3 A+ 9 27
+NEXT1: 2303203 * Analog Circuit Design --- --- --- --- --- 24/25 20/25 44/50 88 1 A+ 9 9
+NEXT2: * Network Analysis and
+LINE: 2303203 * Analog Circuit Design --- --- --- --- --- 24/25 20/25 44/50 88 1 A+ 9 9
+NEXT1: * Network Analysis and
+NEXT2: 2303104 54/60 4/5 15/15 20/20 --- --- --- 93/100 93 2 O 10 20

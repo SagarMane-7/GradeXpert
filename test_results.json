@@ -1,0 +1,26 @@
+[
+    {
+        "endpoint": "/api/reports/remedial?format=pdf",
+        "status": "OK"
+    },
+    {
+        "endpoint": "/api/reports/remedial?format=xlsx",
+        "status": "OK"
+    },
+    {
+        "endpoint": "/api/reports/subject-weak?format=pdf",
+        "status": "OK"
+    },
+    {
+        "endpoint": "/api/reports/class-summary?format=pdf",
+        "status": "OK"
+    },
+    {
+        "endpoint": "/api/reports/progress?format=pdf",
+        "status": "OK"
+    },
+    {
+        "endpoint": "/api/reports/action-recommendation?format=pdf",
+        "status": "OK"
+    }
+]

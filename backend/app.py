@@ -86,12 +86,33 @@ _data_cache = {}
 
 def get_data_path():
     from flask import request
+    from flask_jwt_extended import get_jwt_identity
+    from models import LedgerUpload
+    
     upload_id = request.args.get('upload_id')
-    data_path = LATEST_DATA_PATH
+    user_id_str = get_jwt_identity()
+    user_id = int(user_id_str) if user_id_str else None
+    
+    data_path = None
+    
+    # If specific history is requested
     if upload_id:
         custom_path = os.path.join(app.config['GENERATED_FOLDER'], f'report_{upload_id}.xlsx')
         if os.path.exists(custom_path):
             data_path = custom_path
+    
+    # If no specific upload requested, default to the LATEST upload by THIS USER
+    if not data_path and user_id:
+        latest_upload = LedgerUpload.query.filter_by(uploaded_by=user_id).order_by(LedgerUpload.upload_date.desc()).first()
+        if latest_upload:
+            custom_path = os.path.join(app.config['GENERATED_FOLDER'], f'report_{latest_upload.id}.xlsx')
+            if os.path.exists(custom_path):
+                data_path = custom_path
+                
+    # Fallback to general latest data if Admin or debugging (optional)
+    if not data_path:
+        data_path = LATEST_DATA_PATH
+        
     return data_path
 
 def get_data():
@@ -225,7 +246,11 @@ def upload_ledger():
 @jwt_required()
 def get_upload_history():
     try:
-        uploads = LedgerUpload.query.order_by(LedgerUpload.upload_date.desc()).all()
+        user_id_str = get_jwt_identity()
+        user_id = int(user_id_str) if user_id_str else None
+        
+        # Only fetch uploads for the CURRENT user
+        uploads = LedgerUpload.query.filter_by(uploaded_by=user_id).order_by(LedgerUpload.upload_date.desc()).all()
         results = []
         seen_filenames = set()
         
@@ -490,7 +515,10 @@ def get_failed_pattern():
 def get_trend_analysis():
     # Fetch from DB LedgerUploads
     try:
-        uploads = LedgerUpload.query.order_by(LedgerUpload.upload_date).all()
+        user_id_str = get_jwt_identity()
+        user_id = int(user_id_str) if user_id_str else None
+        
+        uploads = LedgerUpload.query.filter_by(uploaded_by=user_id).order_by(LedgerUpload.upload_date).all()
         if not uploads:
             # Mock data if empty for demo
             return jsonify([

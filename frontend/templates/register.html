@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Academic Portal Login</title>
+    <title>Academic Portal Registration</title>
 
     <!-- Fonts and Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
@@ -367,106 +367,145 @@
             </div>
 
             <!-- Note: Using 'form' to capture 'Enter' key naturally -->
-            <form id="loginForm" onsubmit="handleLogin(event)">
-
+            <form id="registerForm" onsubmit="handleRegister(event)">
                 <div class="input-group">
-                    <input type="text" id="username" class="form-control" placeholder="Username"
-                        autocomplete="username">
-                    <i class="fa-solid fa-user input-icon"></i>
+                    <label>Full Name</label>
+                    <input type="text" id="name" placeholder="Enter your full name" required autocomplete="name">
+                    <i class="fa-regular fa-user input-icon"></i>
                 </div>
 
                 <div class="input-group">
-                    <input type="password" id="password" class="form-control" placeholder="Password"
-                        autocomplete="current-password">
+                    <label>Registration ID</label>
+                    <input type="text" id="registration_id" placeholder="e.g., TECH12345" required>
+                    <i class="fa-solid fa-id-card input-icon"></i>
+                </div>
+
+                <div class="input-group">
+                    <label>Institute Name</label>
+                    <input type="text" id="institute" value="SCTR'S Pune Institute of Computer Technology" readonly style="background-color:#f1f5f9; color:#64748b; cursor:not-allowed;">
+                    <i class="fa-solid fa-university input-icon"></i>
+                </div>
+
+                <div class="input-group">
+                    <label>Department</label>
+                    <div style="position: relative;">
+                        <select id="department" required style="width: 100%; padding: 12px 16px 12px 42px; border: 1.5px solid var(--surface-border); border-radius: 10px; font-size: 14.5px; background: rgba(255, 255, 255, 0.8); color: var(--text-main); font-weight: 500; appearance: none; transition: all 0.3s ease;">
+                            <option value="">Select your department</option>
+                            <option value="Computer Engineering">Computer Engineering</option>
+                            <option value="Information Technology">Information Technology</option>
+                            <option value="Electronics and Telecommunication Engineering">Electronics and Telecommunication Engineering</option>
+                            <option value="Artificial Intelligence and Data Science">Artificial Intelligence and Data Science</option>
+                            <option value="Electronics and Computer Engineering">Electronics and Computer Engineering</option>
+                        </select>
+                        <i class="fa-solid fa-building input-icon"></i>
+                        <i class="fa-solid fa-chevron-down" style="position: absolute; right: 16px; top: 16px; color: #94a3b8; pointer-events: none;"></i>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="Create a password" required>
                     <i class="fa-solid fa-lock input-icon"></i>
+                    <i class="fa-solid fa-eye-slash toggle-eye" onclick="togglePwd('password', this)" style="position: absolute; right: 16px; top: 40px; color: #94a3b8; cursor: pointer;"></i>
                 </div>
 
-                <button type="submit" class="btn-login" id="loginBtn">
-                    <span id="btnText">Sign In</span>
-                    <i id="btnIcon" class="fa-solid fa-arrow-right-to-bracket"
-                        style="font-size: 14px; margin-left: 4px;"></i>
+                <div class="input-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="confirm_password" placeholder="Confirm your password" required>
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <i class="fa-solid fa-eye-slash toggle-eye" onclick="togglePwd('confirm_password', this)" style="position: absolute; right: 16px; top: 40px; color: #94a3b8; cursor: pointer;"></i>
+                </div>
+
+                <button type="submit" class="btn-login" id="registerBtn">
+                    <span id="btnText">Create Account</span>
+                    <i id="btnIcon" class="fa-solid fa-user-plus" style="font-size: 14px; margin-left: 4px;"></i>
                     <div class="loader" id="loader"></div>
                 </button>
-
             </form>
-
-            <!-- Registration Link -->
+            
             <p style="text-align: center; margin-top: 25px; font-size: 14px; color: var(--text-muted);">
-                Don't have an account? 
-                <a href="register.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">Register Here</a>
+                Already have an account? 
+                <a href="index.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">Sign In</a>
             </p>
-
         </div>
     </div>
 
     <script>
         const BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" ? "http://127.0.0.1:5000" : "";
-        async function handleLogin(e) {
-            e.preventDefault(); // Prevent page reload
+        
+        function togglePwd(id, icon) {
+            const input = document.getElementById(id);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        }
 
-            const usernameInput = document.getElementById("username");
-            const passwordInput = document.getElementById("password");
-            const username = usernameInput.value.trim();
-            const password = passwordInput.value;
+        async function handleRegister(e) {
+            e.preventDefault();
 
-            if (!username || !password) {
-                showToast("Please enter both username and password.");
-                usernameInput.focus();
+            const name = document.getElementById("name").value.trim();
+            const registration_id = document.getElementById("registration_id").value.trim();
+            const institute = document.getElementById("institute").value.trim();
+            const department = document.getElementById("department").value;
+            const password = document.getElementById("password").value;
+            const confirm_password = document.getElementById("confirm_password").value;
+
+            if (password !== confirm_password) {
+                showToast("Passwords do not match!");
                 return;
             }
 
-            // Element References
             const btnText = document.getElementById("btnText");
             const btnIcon = document.getElementById("btnIcon");
             const loader = document.getElementById("loader");
-            const loginBtn = document.getElementById("loginBtn");
+            const registerBtn = document.getElementById("registerBtn");
 
-            // UI Loading State
-            loginBtn.disabled = true;
+            registerBtn.disabled = true;
             btnText.style.display = "none";
             btnIcon.style.display = "none";
             loader.style.display = "block";
 
             try {
-                const res = await fetch(`${BASE_URL}/api/auth/login`, {
+                const res = await fetch(`${BASE_URL}/api/auth/register`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ name, registration_id, institute, department, password })
                 });
 
                 const data = await res.json();
 
                 if (!res.ok) {
-                    showToast(data.error || "Invalid credentials provided.");
-                    resetBtnState();
+                    showToast(data.error || "Failed to register.");
+                    resetBtn();
                     return;
                 }
 
-                // Success! Store JWT & Metadata
-                localStorage.setItem("token", data.access_token);
-                localStorage.setItem("role", data.role);
-                localStorage.setItem("username", username);
-
-                // Navigate immediately without delay
-                window.location.href = "dashboard.html";
+                // Success! Redirect to login page
+                showToast("Registration successful! Redirecting...");
+                setTimeout(() => {
+                    window.location.href = "index.html";
+                }, 1500);
 
             } catch (err) {
-                console.error("Auth Error:", err);
-                showToast("Server connection error. Is the backend running?");
-                resetBtnState();
+                console.error("Registration Error:", err);
+                showToast("Server connection error.");
+                resetBtn();
             }
 
-            function resetBtnState() {
-                loginBtn.disabled = false;
+            function resetBtn() {
+                registerBtn.disabled = false;
                 btnText.style.display = "inline";
                 btnIcon.style.display = "inline";
                 loader.style.display = "none";
-                passwordInput.value = ""; // Clear password securely on fail
-                passwordInput.focus();
             }
         }
-
-        let toastTimeout;
+let toastTimeout;
         function showToast(msg) {
             const toast = document.getElementById("errorToast");
             document.getElementById("errorMsgTxt").innerText = msg;

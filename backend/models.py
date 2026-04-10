@@ -10,6 +10,12 @@ class User(db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(20), nullable=False) # 'admin', 'hod', 'faculty'
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True) # Null for Admin
+    
+    # New Registration Fields
+    name = db.Column(db.String(150), nullable=True)
+    registration_id = db.Column(db.String(50), nullable=True)
+    institute = db.Column(db.String(255), nullable=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class LedgerUpload(db.Model):

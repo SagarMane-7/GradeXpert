@@ -1,9 +1,51 @@
 from flask import Blueprint, request, jsonify
 from models import db, User, Branch
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 auth_bp = Blueprint('auth', __name__)
+
+@auth_bp.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    name = data.get('name')
+    registration_id = data.get('registration_id')
+    institute = data.get('institute')
+    department_name = data.get('department')
+    password = data.get('password')
+    
+    # Use registration_id as the unique username
+    username = registration_id
+    
+    if not all([name, registration_id, department_name, password]):
+        return jsonify({"error": "Missing required fields"}), 400
+        
+    if User.query.filter_by(username=username).first():
+        return jsonify({"error": "User with this Registration ID already exists"}), 400
+        
+    # Get or create the branch dynamically
+    branch = Branch.query.filter_by(name=department_name).first()
+    if not branch:
+        branch = Branch(name=department_name)
+        db.session.add(branch)
+        db.session.commit()
+        
+    hashed_pw = generate_password_hash(password, method='pbkdf2:sha256')
+    
+    new_user = User(
+        username=username,
+        password_hash=hashed_pw,
+        role='faculty', # Automatically assign as faculty
+        branch_id=branch.id,
+        name=name,
+        registration_id=registration_id,
+        institute=institute
+    )
+    
+    db.session.add(new_user)
+    db.session.commit()
+    
+    return jsonify({"message": "Successfully registered!"}), 201
 
 @auth_bp.route('/login', methods=['POST'])
 def login():

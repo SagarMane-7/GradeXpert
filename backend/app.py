@@ -13,11 +13,10 @@ from services.ledger_parser import parse_sppu_ledger, generate_excel_from_data
 from services.db_services import save_ledger_data_to_db
 from flask_jwt_extended import get_jwt_identity, jwt_required, get_jwt, JWTManager
 from routes.auth_routes import auth_bp
-# Load environment variables
-load_dotenv()
-
 # Adjust paths for backend/app.py location
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+env_path = os.path.join(BASE_DIR, '..', '.env')
+load_dotenv(dotenv_path=env_path)
 FRONTEND_DIR = os.path.join(BASE_DIR, '..', 'frontend')
 UPLOADS_DIR = os.path.join(BASE_DIR, '..', 'uploads')
 GENERATED_DIR = os.path.join(BASE_DIR, '..', 'generated')

@@ -1,4 +1,4 @@
-import pdfplumber
+import fitz  # PyMuPDF
 import re
 import pandas as pd
 import logging
@@ -6,16 +6,39 @@ import logging
 # Configure Logging
 logging.basicConfig(filename='ledger_debug.log', level=logging.INFO, format='%(asctime)s - %(message)s')
 
+def extract_text_horizontal(pdf_path):
+    """
+    Simulates pdfplumber's layout-preserving text extraction horizontally 
+    by grouping PyMuPDF words visually on rounded Y-coordinates.
+    """
+    full_text = ""
+    with fitz.open(pdf_path) as doc:
+        for page in doc:
+            words = page.get_text("words")
+            # Group by roughly matching horizontal line (y-coordinate)
+            lines_dict = {}
+            for w in words:
+                x0, y0, x1, y1, text, block_no, line_no, word_no = w
+                # Rounding bottom y-coordinate to group words on the exact same line
+                y_key = round(y1, 0)
+                lines_dict.setdefault(y_key, []).append((x0, text))
+            
+            # Reconstruct the page line by line top to bottom
+            for y_key in sorted(lines_dict.keys()):
+                # Sort words in the line horizontally (left to right)
+                line_words = sorted(lines_dict[y_key], key=lambda x: x[0])
+                line_text = " ".join([word[1] for word in line_words])
+                full_text += line_text + "\n"
+    return full_text
+
 def parse_sppu_ledger(pdf_path):
     """
     Parses SPPU Ledger PDF and returns a list of student dictionaries.
     """
     students = []
     
-    with pdfplumber.open(pdf_path) as pdf:
-        full_text = ""
-        for page in pdf.pages:
-            full_text += page.extract_text() + "\n"
+    # 1. Ultra-fast PyMuPDF horizontal extraction
+    full_text = extract_text_horizontal(pdf_path)
             
     # SPPU ledgers usually list students sequentially.
     # We can split by "Seat No:" to isolate records, but "Seat No" is also in the header.

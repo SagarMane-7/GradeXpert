@@ -63,13 +63,13 @@ async function initDashboard() {
             const elPassCount = document.getElementById('stat-pass-count');
             const elFailed = document.getElementById('stat-failed');
             const elPassPerc = document.getElementById('stat-pass');
-            
-            if(elTotal) elTotal.innerText = stats.totalStudents;
-            if(elPassCount) elPassCount.innerText = stats.passedStudents;
-            if(elFailed) elFailed.innerText = stats.failedStudents;
-            if(elPassPerc) elPassPerc.innerText = stats.passPercentage + '% ';
+
+            if (elTotal) elTotal.innerText = stats.totalStudents;
+            if (elPassCount) elPassCount.innerText = stats.passedStudents;
+            if (elFailed) elFailed.innerText = stats.failedStudents;
+            if (elPassPerc) elPassPerc.innerText = stats.passPercentage + '% ';
         }
-    } catch(err) {
+    } catch (err) {
         console.error('Error fetching dashboard stats:', err);
     }
 
@@ -149,8 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = 'profile.html';
                 });
                 // Hover effect inject
-                profileSidebar.onmouseover = function() { this.style.backgroundColor = '#f1f1fc'; };
-                profileSidebar.onmouseout = function() { this.style.backgroundColor = 'transparent'; };
+                profileSidebar.onmouseover = function () { this.style.backgroundColor = '#f1f1fc'; };
+                profileSidebar.onmouseout = function () { this.style.backgroundColor = 'transparent'; };
             }
         }
 
@@ -213,7 +213,7 @@ async function submitClassSchedule() {
 
     const btnElement = document.getElementById('btnSubmitSchedule');
     const originalText = btnElement.innerHTML;
-    
+
     // Set UI to loading state
     btnElement.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 8px;"></i> Sending Invitations...';
     btnElement.disabled = true;
@@ -244,7 +244,7 @@ async function submitClassSchedule() {
                 try {
                     const data = await response.json();
                     if (data.error) errorMsg = data.error;
-                } catch(e) {}
+                } catch (e) { }
             }
             if (window.showToast) window.showToast(errorMsg, 'error');
             else alert(errorMsg);

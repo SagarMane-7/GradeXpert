@@ -372,20 +372,26 @@
             <form id="registerForm" onsubmit="handleRegister(event)">
                 <div class="input-group">
                     <label style="display:block; margin-bottom: 5px; font-size: 13px; font-weight: 500; color: var(--text-muted);">Full Name</label>
-                    <input type="text" id="name" class="form-control" placeholder="Enter your full name" required autocomplete="name">
-                    <i class="fa-regular fa-user input-icon" style="top: 38px;"></i>
+                    <div style="position: relative;">
+                        <input type="text" id="name" class="form-control" placeholder="Enter your full name" required autocomplete="name">
+                        <i class="fa-regular fa-user input-icon"></i>
+                    </div>
                 </div>
 
                 <div class="input-group">
                     <label style="display:block; margin-bottom: 5px; font-size: 13px; font-weight: 500; color: var(--text-muted);">Registration ID</label>
-                    <input type="text" id="registration_id" class="form-control" placeholder="e.g., TECH12345" required>
-                    <i class="fa-solid fa-id-card input-icon" style="top: 38px;"></i>
+                    <div style="position: relative;">
+                        <input type="text" id="registration_id" class="form-control" placeholder="e.g., TECH12345" required>
+                        <i class="fa-solid fa-id-card input-icon"></i>
+                    </div>
                 </div>
 
                 <div class="input-group">
                     <label style="display:block; margin-bottom: 5px; font-size: 13px; font-weight: 500; color: var(--text-muted);">Institute Name</label>
-                    <input type="text" id="institute" class="form-control" value="SCTR'S Pune Institute of Computer Technology" readonly style="background-color:#f1f5f9; color:#64748b; cursor:not-allowed;">
-                    <i class="fa-solid fa-university input-icon" style="top: 38px;"></i>
+                    <div style="position: relative;">
+                        <input type="text" id="institute" class="form-control" value="SCTR'S Pune Institute of Computer Technology" readonly style="background-color:#f1f5f9; color:#64748b; cursor:not-allowed;">
+                        <i class="fa-solid fa-university input-icon"></i>
+                    </div>
                 </div>
 
                 <div class="input-group">
@@ -399,7 +405,7 @@
                             <option value="Artificial Intelligence and Data Science">Artificial Intelligence and Data Science</option>
                             <option value="Electronics and Computer Engineering">Electronics and Computer Engineering</option>
                         </select>
-                        <i class="fa-solid fa-building input-icon" style="top: 50%;"></i>
+                        <i class="fa-solid fa-building input-icon"></i>
                         <i class="fa-solid fa-chevron-down" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none;"></i>
                     </div>
                 </div>
@@ -408,7 +414,7 @@
                     <label style="display:block; margin-bottom: 5px; font-size: 13px; font-weight: 500; color: var(--text-muted);">Password</label>
                     <div style="position: relative;">
                         <input type="password" id="password" class="form-control" placeholder="Create a password" required>
-                        <i class="fa-solid fa-lock input-icon" style="top: 50%;"></i>
+                        <i class="fa-solid fa-lock input-icon"></i>
                         <i class="fa-solid fa-eye-slash toggle-eye" onclick="togglePwd('password', this)" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer; z-index: 10;"></i>
                     </div>
                 </div>
@@ -417,7 +423,7 @@
                     <label style="display:block; margin-bottom: 5px; font-size: 13px; font-weight: 500; color: var(--text-muted);">Confirm Password</label>
                     <div style="position: relative;">
                         <input type="password" id="confirm_password" class="form-control" placeholder="Confirm your password" required>
-                        <i class="fa-solid fa-lock input-icon" style="top: 50%;"></i>
+                        <i class="fa-solid fa-lock input-icon"></i>
                         <i class="fa-solid fa-eye-slash toggle-eye" onclick="togglePwd('confirm_password', this)" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; cursor: pointer; z-index: 10;"></i>
                     </div>
                 </div>

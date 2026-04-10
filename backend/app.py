@@ -60,8 +60,6 @@ with app.app_context():
     except Exception as e:
         print(f"Error during DB initialization: {e}")
 
-# --- Global Data Storage (In-memory/File-based for Demo) ---
-LATEST_DATA_PATH = os.path.join(app.config['GENERATED_FOLDER'], 'latest_report.xlsx')
 
 @app.after_request
 def add_header(response):
@@ -110,14 +108,9 @@ def get_data_path():
                 
     # ENFORCE STRICT ISOLATION: 
     # If the user hasn't uploaded any data, we intentionally return None
-    # so the dashboard reads empty rather than stealing LATEST_DATA_PATH
+    # No fallback to shared global paths.
     if not data_path:
-        from flask_jwt_extended import get_jwt
-        claims = get_jwt()
-        if claims and claims.get('role') == 'admin':
-            data_path = LATEST_DATA_PATH
-        else:
-            return None
+        return None
         
     return data_path
 
@@ -193,39 +186,41 @@ def upload_ledger():
             # 1. Parse PDF
             students = parse_sppu_ledger(filepath)
             
-            # 2. Generate and Save Excel (Sources of Truth)
-            df = generate_excel_from_data(students, LATEST_DATA_PATH)
+            # Get current user identity BEFORE DB commit and excel generate
+            current_user_id_str = get_jwt_identity()
+            user_id = int(current_user_id_str) if current_user_id_str else None
+
+            # 2. Calculate initial stats directly to create the record first
+            # We don't generate excel to a shared path anymore!
+            
+            # We must create the upload record first to get the upload_record.id
+            upload_record = LedgerUpload(
+                filename=file.filename,
+                uploaded_by=user_id,
+                academic_year="2023-2024",
+                semester="2",
+                total_students=0,  # Will update after df calculation
+                pass_count=0,
+                fail_count=0
+            )
+            db.session.add(upload_record)
+            db.session.flush() # Get ID without committing so it doesn't leave partial empty record on crash
+            
+            history_excel_path = os.path.join(app.config['GENERATED_FOLDER'], f'report_{upload_record.id}.xlsx')
+            
+            # 3. Generate and Save Excel (Sources of Truth) directly to tenant file
+            df = generate_excel_from_data(students, history_excel_path)
             
             # FORCE CACHE INVALIDATION: clear any memory holds on the previous dashboard data
             _data_cache.clear()
             
-            # 3. Save to Ledger History (DB)
+            # 4. Save to Ledger History (DB)
             if not df.empty:
-                total = len(df)
-                passed = len(df[df['status'] == 'Pass'])
-                failed = len(df[df['status'] == 'Fail'])
+                upload_record.total_students = len(df)
+                upload_record.pass_count = len(df[df['status'] == 'Pass'])
+                upload_record.fail_count = len(df[df['status'] == 'Fail'])
                 
-                # Get current user identity
-                # identity is now a string (user_id)
-                current_user_id_str = get_jwt_identity()
-                user_id = int(current_user_id_str) if current_user_id_str else None
-
-                # Create Record
-                upload_record = LedgerUpload(
-                    filename=file.filename,
-                    uploaded_by=user_id,
-                    academic_year="2023-2024", # Simplification: extract from filename or PDF later
-                    semester="2",              # Simplification
-                    total_students=total,
-                    pass_count=passed,
-                    fail_count=failed
-                )
-                db.session.add(upload_record)
                 db.session.commit()
-                
-                # Copy excel to history
-                history_excel_path = os.path.join(app.config['GENERATED_FOLDER'], f'report_{upload_record.id}.xlsx')
-                shutil.copy(LATEST_DATA_PATH, history_excel_path)
                 
                 # Save parsed data to Relational DB Tables
                 try:
@@ -786,32 +781,28 @@ def get_subject_students():
 @app.route('/api/report/download', methods=['GET'])
 @jwt_required()
 def download_report():
-    upload_id = request.args.get('upload_id')
-    data_path = LATEST_DATA_PATH
+    data_path = get_data_path()
     download_name = 'Generated_Result_Report.xlsx'
 
-    if upload_id:
-        custom_path = os.path.join(app.config['GENERATED_FOLDER'], f'report_{upload_id}.xlsx')
-        if os.path.exists(custom_path):
-            data_path = custom_path
-            record = LedgerUpload.query.get(upload_id)
-            if record and record.filename:
-                base = os.path.splitext(record.filename)[0]
-                download_name = f"{base}.xlsx"
-    else:
-        record = LedgerUpload.query.order_by(LedgerUpload.upload_date.desc()).first()
+    if not data_path or not os.path.exists(data_path):
+        return jsonify({"error": "Report not found"}), 404
+
+    try:
+        base_name = os.path.basename(data_path)
+        upload_id_str = base_name.replace('report_', '').replace('.xlsx', '')
+        record = LedgerUpload.query.get(int(upload_id_str))
         if record and record.filename:
             base = os.path.splitext(record.filename)[0]
             download_name = f"{base}.xlsx"
+    except Exception:
+        pass
 
-    if os.path.exists(data_path):
-        return send_file(
-            data_path,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            as_attachment=True,
-            download_name=download_name
-        )
-    return jsonify({"error": "Report not found"}), 404
+    return send_file(
+        data_path,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=download_name
+    )
 def generate_pdf_table(title, df, columns):
     pdf = FPDF()
     pdf.add_page()

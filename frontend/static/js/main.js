@@ -131,6 +131,36 @@ function initReports() {
 }
 
 
+// Initialize User Profile DOM Text
+function initUserProfile() {
+    const name = localStorage.getItem('name') || localStorage.getItem('username') || 'User';
+    const role = localStorage.getItem('role') || 'Unknown';
+    
+    // Format Role
+    let displayRole = 'Faculty/Staff';
+    if(role.toLowerCase() === 'admin') displayRole = 'Administrator';
+    else if(role.toLowerCase() === 'faculty') displayRole = 'Teaching Staff';
+    
+    // Find User Profile elements
+    const profileEls = document.querySelectorAll('.user-profile');
+    if (!profileEls || profileEls.length === 0) return;
+    
+    profileEls.forEach(profileContainer => {
+        // Typically it's the second child that holds the name and subtitle
+        const textContainer = profileContainer.children[1];
+        if (textContainer && textContainer.children.length >= 2) {
+            textContainer.children[0].innerText = name;
+            textContainer.children[1].innerText = displayRole;
+        }
+        
+        // Update the Initial Avatar (first child)
+        const avatarContainer = profileContainer.children[0];
+        if (avatarContainer && name) {
+            avatarContainer.innerText = name.charAt(0).toUpperCase();
+        }
+    });
+}
+
 // Initialize on Load
 document.addEventListener('DOMContentLoaded', () => {
     // Check Auth
@@ -138,6 +168,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!token) {
         window.location.href = 'index.html';
     } else {
+        // Trigger Profile update
+        initUserProfile();
+        
         // If we're not on index.html, initialize profile sidebar clickability
         if (!window.location.pathname.endsWith('index.html')) {
             // Make profile sidebar clickable

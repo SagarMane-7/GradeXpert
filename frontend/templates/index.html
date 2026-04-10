@@ -446,6 +446,9 @@
                 localStorage.setItem("token", data.access_token);
                 localStorage.setItem("role", data.role);
                 localStorage.setItem("username", username);
+                if (data.name) {
+                    localStorage.setItem("name", data.name);
+                }
 
                 // Navigate immediately without delay
                 window.location.href = "dashboard.html";

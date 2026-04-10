@@ -66,7 +66,11 @@ def login():
                 'branch_id': user.branch_id
             }
         )
-        return jsonify(access_token=access_token, role=user.role), 200
+        return jsonify(
+            access_token=access_token, 
+            role=user.role, 
+            name=user.name if hasattr(user, 'name') else 'User'
+        ), 200
     
     return jsonify({"error": "Invalid credentials"}), 401
 

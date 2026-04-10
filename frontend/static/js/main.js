@@ -1,6 +1,6 @@
 // main.js - Production Grade Frontend Logic
 
-const BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" ? "http://127.0.0.1:10000" : "https://gradexpert-k9qw.onrender.com";
+const BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" ? "http://127.0.0.1:5000" : "";
 const API_BASE = `${BASE_URL}/api`;
 
 const urlParams = new URLSearchParams(window.location.search);

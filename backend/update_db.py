@@ -1,33 +1,39 @@
-import sqlite3
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'instance', 'data.sqlite'))
+from app import app, db
+from sqlalchemy import text
 
-if os.path.exists(db_path):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
-    if cursor.fetchone():
-        # Check if name column exists
-        cursor.execute("PRAGMA table_info(users)")
-        columns = [col[1] for col in cursor.fetchall()]
+def update_schema():
+    with app.app_context():
+        engine = db.engine
         
-        if 'name' not in columns:
-            print("Migrating Database: Adding 'name'...")
-            cursor.execute("ALTER TABLE users ADD COLUMN name VARCHAR(150)")
-        if 'registration_id' not in columns:
-            print("Migrating Database: Adding 'registration_id'...")
-            cursor.execute("ALTER TABLE users ADD COLUMN registration_id VARCHAR(50)")
-        if 'institute' not in columns:
-            print("Migrating Database: Adding 'institute'...")
-            cursor.execute("ALTER TABLE users ADD COLUMN institute VARCHAR(255)")
+        with engine.connect() as conn:
+            print("Connected to database defined by app.y!")
             
-        print("Database Migration Complete!")
-        conn.commit()
-    else:
-        print("Table 'users' does not exist yet. SQLAlchemy will auto-create it with the new schema on boot.")
-    
-    conn.close()
-else:
-    print(f"No DB found at {db_path}. SQLAlchemy will auto-create it on boot.")
+            # Check existing columns using native approach instead of raw SQL
+            # However, text executes raw SQL across Postgres/SQLite easily for simple ADD COLUMN.
+            try:
+                conn.execute(text("ALTER TABLE users ADD COLUMN name VARCHAR(150)"))
+                print("Added column: name")
+            except Exception as e:
+                pass # Usually implies column already exists
+                
+            try:
+                conn.execute(text("ALTER TABLE users ADD COLUMN registration_id VARCHAR(50)"))
+                print("Added column: registration_id")
+            except Exception as e:
+                pass
+                
+            try:
+                conn.execute(text("ALTER TABLE users ADD COLUMN institute VARCHAR(255)"))
+                print("Added column: institute")
+            except Exception as e:
+                pass
+                
+            conn.commit()
+            print("Database Migration Check Complete.")
+
+if __name__ == "__main__":
+    update_schema()

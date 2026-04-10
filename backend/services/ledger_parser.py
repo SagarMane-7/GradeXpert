@@ -301,20 +301,11 @@ def parse_sppu_ledger(pdf_path):
                                 pass
                         
                         
-                        if is_theory:
-                            def get_theory_grade(tot):
-                                if tot >= 90: return 'O'
-                                if tot >= 80: return 'A+'
-                                if tot >= 70: return 'A'
-                                if tot >= 60: return 'B+'
-                                if tot >= 50: return 'B'
-                                if tot >= 45: return 'C'
-                                if tot >= 40: return 'P'
-                                return 'F'
-                            
-                            found_grade = get_theory_grade(calc_total)
-                            total_marks = f"{calc_total}/100"
-                            
+                        # The following logic used to recalculate get_theory_grade(calc_total) manually.
+                        # This was extremely harmful because it ignored Ordinance Grace / Condonation marks ($ or #)
+                        # and caused students who officially 'Pass' with 'P' to be falsely marked as 'F' (Fail).
+                        # We now rely 100% on the official SPPU `found_grade` and `total_marks` extracted directly from the text line.
+                        
                         current_student["subjects"][f"{subject_key}_TOTAL"] = total_marks
                         current_student["subjects"][f"{subject_key}_GRADE"] = found_grade
 

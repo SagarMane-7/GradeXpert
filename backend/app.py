@@ -96,7 +96,9 @@ def get_data_path():
     if upload_id:
         custom_path = os.path.join(app.config['GENERATED_FOLDER'], f'report_{upload_id}.xlsx')
         if os.path.exists(custom_path):
-            data_path = custom_path
+            record = LedgerUpload.query.get(upload_id)
+            if record and record.uploaded_by == user_id:
+                data_path = custom_path
     
     # If no specific upload requested, default to the LATEST upload by THIS USER
     if not data_path and user_id:

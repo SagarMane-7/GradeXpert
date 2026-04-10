@@ -599,7 +599,7 @@ def get_student_record(seat_no):
 @jwt_required()
 def get_subject_analysis():
     data_path = get_data_path()
-    if os.path.exists(data_path):
+    if data_path and os.path.exists(data_path):
         try:
             sub_df = pd.read_excel(data_path, sheet_name='Subjectwise')
             if sub_df.empty: return jsonify([])
@@ -715,7 +715,7 @@ def get_subject_students():
         return jsonify({"error": "Subject parameter is required"}), 400
 
     data_path = get_data_path()
-    if not os.path.exists(data_path):
+    if not data_path or not os.path.exists(data_path):
         return jsonify([])
 
     try:
@@ -875,7 +875,7 @@ def handle_multi_format_download(df, filename_prefix, pdf_cols):
 @jwt_required()
 def report_remedial():
     data_path = get_data_path()
-    if not os.path.exists(data_path): return jsonify({"error": "No data"}), 404
+    if not data_path or not os.path.exists(data_path): return jsonify({"error": "No data"}), 404
     try:
         sub_df = pd.read_excel(data_path, sheet_name='Subjectwise')
         all_df = pd.read_excel(data_path, sheet_name='All Students')
@@ -896,7 +896,7 @@ def report_remedial():
 @jwt_required()
 def report_subject_weak():
     data_path = get_data_path()
-    if not os.path.exists(data_path): return jsonify({"error": "No data"}), 404
+    if not data_path or not os.path.exists(data_path): return jsonify({"error": "No data"}), 404
     try:
         sub_df = pd.read_excel(data_path, sheet_name='Subjectwise')
         all_df = pd.read_excel(data_path, sheet_name='All Students')

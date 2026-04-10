@@ -109,9 +109,16 @@ def get_data_path():
             if os.path.exists(custom_path):
                 data_path = custom_path
                 
-    # Fallback to general latest data if Admin or debugging (optional)
+    # ENFORCE STRICT ISOLATION: 
+    # If the user hasn't uploaded any data, we intentionally return None
+    # so the dashboard reads empty rather than stealing LATEST_DATA_PATH
     if not data_path:
-        data_path = LATEST_DATA_PATH
+        from flask_jwt_extended import get_jwt
+        claims = get_jwt()
+        if claims and claims.get('role') == 'admin':
+            data_path = LATEST_DATA_PATH
+        else:
+            return None
         
     return data_path
 
@@ -119,7 +126,7 @@ def get_data():
     """Helper to load the latest or specific processed data with caching to prevent hangs."""
     data_path = get_data_path()
 
-    if os.path.exists(data_path):
+    if data_path and os.path.exists(data_path):
         try:
             mtime = os.path.getmtime(data_path)
             # Return cached dataframe if file hasn't changed

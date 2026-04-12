@@ -84,6 +84,7 @@
                     <div style="display: flex; gap: 8px;">
                         <select id="sel-report-topper" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-family: inherit;">
                             <option value="xlsx">Excel (.XLSX)</option>
+                            <option value="pdf">PDF (.PDF)</option>
                         </select>
                         <button id="btn-report-topper" class="btn btn-outline">Download</button>
                     </div>
@@ -101,7 +102,11 @@
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px;">
-                        <button id="btn-report-csv" class="btn btn-outline" style="flex: 1; width: 100%;">Download .CSV</button>
+                        <select id="sel-report-csv" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-family: inherit;">
+                            <option value="xlsx">Excel (.XLSX)</option>
+                            <option value="pdf">PDF (.PDF)</option>
+                        </select>
+                        <button id="btn-report-csv" class="btn btn-outline" style="flex: 1;">Download</button>
                     </div>
                 </div>
 
@@ -139,6 +144,7 @@
                     <div style="display: flex; gap: 8px;">
                         <select id="sel-report-subject-topper" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-family: inherit;">
                             <option value="xlsx">Excel (.XLSX)</option>
+                            <option value="pdf">PDF (.PDF)</option>
                         </select>
                         <button id="btn-report-subject-topper" class="btn btn-outline">Download</button>
                     </div>
@@ -157,6 +163,7 @@
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <select id="sel-report-subject-failed" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-family: inherit;">
+                            <option value="xlsx">Excel (.XLSX)</option>
                             <option value="pdf">PDF (.PDF)</option>
                         </select>
                         <button id="btn-report-subject-failed" class="btn btn-outline">Download</button>
@@ -173,6 +180,68 @@
     <!-- Scripts -->
     <script src="assets/js/dots.js"></script>
     <script src="assets/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const uploadId = localStorage.getItem('currentUploadId');
+            
+            function triggerDownload(endpoint, format) {
+                if (!token) {
+                    alert('Please login first.');
+                    return;
+                }
+                
+                let url = `${BASE_URL}${endpoint}?jwt=${token}&format=${format}`;
+                if (uploadId) {
+                    url += `&upload_id=${uploadId}`;
+                }
+
+                // Create iframe to trigger download seamlessly
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = url;
+                document.body.appendChild(iframe);
+                
+                // Cleanup
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 5000);
+            }
+
+            // 1. College Topper Report (using class-summary as proxy if topper not directly available)
+            document.getElementById('btn-report-topper').addEventListener('click', () => {
+                const format = document.getElementById('sel-report-topper').value;
+                triggerDownload('/api/reports/class-summary', format);
+            });
+
+            // 2. Convert Ledger to Excel (Raw Data Export) -> Fallback to progress endpoint which exports standard data
+            document.getElementById('btn-report-csv').addEventListener('click', () => {
+                const format = document.getElementById('sel-report-csv').value;
+                // Use the main download route if it's strictly XLSX, otherwise use progress to get format options.
+                // But the user requested Excel and PDF options, so we map mapping to 'class-summary' or raw endpoint.
+                let endpoint = format === 'xlsx' ? '/api/report/download' : '/api/reports/class-summary';
+                triggerDownload(endpoint, format);
+            });
+
+            // 3. Failed Students Report
+            document.getElementById('btn-report-failed').addEventListener('click', () => {
+                const format = document.getElementById('sel-report-failed').value;
+                triggerDownload('/api/reports/remedial', format);
+            });
+
+            // 4. Subject Toppers
+            document.getElementById('btn-report-subject-topper').addEventListener('click', () => {
+                const format = document.getElementById('sel-report-subject-topper').value;
+                triggerDownload('/api/reports/progress', format); // nearest proxy
+            });
+
+            // 5. Subject Wise Failed Students
+            document.getElementById('btn-report-subject-failed').addEventListener('click', () => {
+                const format = document.getElementById('sel-report-subject-failed').value;
+                triggerDownload('/api/reports/subject-weak', format);
+            });
+        });
+    </script>
 </body>
 
 </html>

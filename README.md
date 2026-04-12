@@ -13,15 +13,25 @@ This README provides the **Ultimate Step-by-Step Guide** to open, configure, and
 
 ## 🛠️ The Technology Stack & Dependencies
 
-To guarantee this project runs without any bugs, the environment relies on the exact libraries listed in your `requirements.txt`. Here are the core engines used:
+To guarantee this project runs without any bugs, the environment relies on the exact libraries listed in your `requirements.txt` and modern frontend standards. Here are the core engines used:
 
+### Frontend Technologies
+| Component | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Core UI** | HTML5, CSS3, Vanilla JS | Builds a responsive, glassmorphic, and dynamic user interface. |
+| **Data Visualization** | `Chart.js` | Renders interactive trend line charts and pie charts for dashboard analytics. |
+| **Typography & Icons** | `FontAwesome`, `Google Fonts (Inter)` | Provides modern, scalable icons and beautiful typography. |
+
+### Backend & Data Processing
 | Component | Library/Technology | Purpose |
 | :--- | :--- | :--- |
-| **Backend Core** | `flask`, `werkzeug` | Powers the local server API and renders the HTML templates. |
-| **Data Parsing** | `pdfplumber` | Reads the complicated layout of SPPU PDF files safely. |
-| **Data Analysis** | `pandas`, `openpyxl` | Analyzes student marks, converts them into Excel sheets, and tracks performance. |
-| **Database** | `flask-sqlalchemy` | Local SQLite database mapper to store login credentials and upload history. |
-| **Security** | `flask-jwt-extended`, `flask-cors` | Secure login workflows and token management. |
+| **Backend Core** | `Flask`, `Werkzeug` | Powers the server API and handles HTTP requests securely. |
+| **Data Parsing** | `PyMuPDF` (`pymupdf`), `pypdfium2` | Rapidly and accurately reads the complex layout of SPPU PDF ledger files. |
+| **Data Analysis** | `pandas`, `numpy`, `openpyxl` | Cleans data, calculates averages, identifies failures, and exports to Excel. |
+| **Database** | `SQLAlchemy`, `psycopg2-binary` | Flexible ORM supporting SQLite locally and PostgreSQL in production. |
+| **Security** | `Flask-JWT-Extended`, `Flask-CORS` | Provides secure token-based authentication and cross-origin resource sharing. |
+| **PDF Generation** | `fpdf2` | Dynamically generates structured PDF analytical reports for download. |
+| **Deployment** | `gunicorn`, `python-dotenv` | Robust WSGI HTTP server for production deployment and environment management. |
 
 ---
 
@@ -103,8 +113,8 @@ Once the terminal reads `* Running on http://127.0.0.1:5000`, your server is suc
 
 ## 🔐 System Architecture Flow
 
-1. **Authentication:** The `admin` user logs in through the frontend `index.html`.
-2. **Uploading:** A PDF ledger is securely passed to `backend/services/ledger_parser.py`.
-3. **Structuring:** `pdfplumber` breaks down tables while skipping headers/footers, and `pandas` calculates class averages and fails.
-4. **Caching:** The dashboard components load dynamic SVG and Chart.js canvases based on immediate, exact SQLite backend reads.
-5. **Print Mode**: A custom engineered `Ctrl+P` export layout hides the web layout and scales analytics perfectly to A4 PDF exports.
+1. **Authentication:** The secure login workflow issues JWT tokens on the frontend via `index.html`.
+2. **Uploading:** A PDF ledger is securely passed from the frontend to the Flask backend API.
+3. **Structuring:** `PyMuPDF` breaks down tables while skipping headers/footers, and `pandas` calculates class averages and fails.
+4. **Dashboard Data:** The dashboard components load dynamic `Chart.js` visual analytics based on immediate backend API requests and database reads.
+5. **Exports:** Deep integration with `fpdf2` and `openpyxl` allows instant automated downloading of comprehensive PDF and Excel reports.

@@ -237,7 +237,7 @@ def upload_ledger():
             db.session.commit() 
             
             # Start background thread
-            thread = threading.Thread(target=process_file_in_background, args=(filepath, user_id, upload_record.id, app._get_current_object()))
+            thread = threading.Thread(target=process_file_in_background, args=(filepath, user_id, upload_record.id, app))
             thread.daemon = True
             thread.start()
 

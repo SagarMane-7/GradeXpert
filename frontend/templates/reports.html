@@ -208,19 +208,17 @@
                 }, 5000);
             }
 
-            // 1. College Topper Report (using class-summary as proxy if topper not directly available)
+            // 1. College Topper Report (using dedicated endpoint)
             document.getElementById('btn-report-topper').addEventListener('click', () => {
                 const format = document.getElementById('sel-report-topper').value;
-                triggerDownload('/api/reports/class-summary', format);
+                triggerDownload('/api/reports/college-topper', format);
             });
 
-            // 2. Convert Ledger to Excel (Raw Data Export) -> Fallback to progress endpoint which exports standard data
+            // 2. Convert Ledger to Excel (Raw Data Export) -> Handled natively
             document.getElementById('btn-report-csv').addEventListener('click', () => {
                 const format = document.getElementById('sel-report-csv').value;
-                // Use the main download route if it's strictly XLSX, otherwise use progress to get format options.
-                // But the user requested Excel and PDF options, so we map mapping to 'class-summary' or raw endpoint.
-                let endpoint = format === 'xlsx' ? '/api/report/download' : '/api/reports/class-summary';
-                triggerDownload(endpoint, format);
+                // /api/report/download now natively parses PDF fallback to summary headers!
+                triggerDownload('/api/report/download', format);
             });
 
             // 3. Failed Students Report
@@ -232,7 +230,7 @@
             // 4. Subject Toppers
             document.getElementById('btn-report-subject-topper').addEventListener('click', () => {
                 const format = document.getElementById('sel-report-subject-topper').value;
-                triggerDownload('/api/reports/progress', format); // nearest proxy
+                triggerDownload('/api/reports/subject-toppers', format);
             });
 
             // 5. Subject Wise Failed Students

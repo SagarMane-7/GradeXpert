@@ -808,6 +808,18 @@ def download_report():
     except Exception:
         pass
 
+    req_format = request.args.get('format', 'xlsx').lower()
+    
+    if req_format == 'pdf':
+        try:
+            df = pd.read_excel(data_path, sheet_name='Overview')
+            # Extract basic columns for raw export so it fits in PDF
+            cols = ['seat_no', 'name', 'branch', 'sgpa', 'status']
+            avail_cols = [c for c in cols if c in df.columns]
+            return handle_multi_format_download(df, base.replace('_', ' '), avail_cols)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
     return send_file(
         data_path,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -1120,6 +1132,63 @@ def notify_remedial_students():
     except Exception as e:
         print(f"SMTP Error: {str(e)}")
         return jsonify({"error": f"Failed to send email: {str(e)}"}), 500
+
+@app.route('/api/reports/college-topper', methods=['GET'])
+@jwt_required()
+def report_college_topper():
+    data_path = get_data_path()
+    if not data_path or not os.path.exists(data_path): return jsonify({"error": "No data"}), 404
+    try:
+        all_df = pd.read_excel(data_path, sheet_name='All Students')
+        
+        all_df['numeric_sgpa'] = pd.to_numeric(all_df['sgpa'], errors='coerce').fillna(0)
+        toppers_list = all_df.sort_values(by='numeric_sgpa', ascending=False)
+        
+        # Take Top 20 across the college
+        top_n = toppers_list.head(20).copy()
+        
+        # Format SGPA
+        top_n['sgpa'] = top_n['sgpa'].astype(str)
+        
+        pdf_cols = ['name', 'branch', 'sgpa', 'seat_no', 'status']
+        avail_cols = [c for c in pdf_cols if c in top_n.columns]
+        
+        return handle_multi_format_download(top_n, 'College_Topper_Report', avail_cols)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/reports/subject-toppers', methods=['GET'])
+@jwt_required()
+def report_subject_toppers():
+    data_path = get_data_path()
+    if not data_path or not os.path.exists(data_path): return jsonify({"error": "No data"}), 404
+    try:
+        sub_df = pd.read_excel(data_path, sheet_name='Subjectwise')
+        all_df = pd.read_excel(data_path, sheet_name='All Students')
+        
+        if 'name' in all_df.columns:
+            sub_df = sub_df.merge(all_df[['seat_no', 'name']], on='seat_no', how='left')
+            
+        # Drop subjects that don't have marks
+        sub_df = sub_df.dropna(subset=['marks'])
+        sub_df['numeric_marks'] = pd.to_numeric(sub_df['marks'].astype(str).str.split('/').str[0], errors='coerce').fillna(-1)
+        
+        # Group by subject and get max numeric mark
+        idx = sub_df.groupby(['subject_code', 'subject_name'])['numeric_marks'].idxmax()
+        toppers = sub_df.loc[idx].copy()
+        
+        toppers = toppers[toppers['numeric_marks'] >= 0]
+        toppers = toppers.sort_values(by='subject_name')
+        
+        toppers['marks'] = toppers['marks'].astype(str)
+        
+        pdf_cols = ['subject_name', 'name', 'marks', 'seat_no']
+        avail_cols = [c for c in pdf_cols if c in toppers.columns]
+        
+        return handle_multi_format_download(toppers, 'Subject_Toppers_Report', avail_cols)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 # --- Main ---
 if __name__ == '__main__':

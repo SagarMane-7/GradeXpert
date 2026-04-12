@@ -167,7 +167,42 @@ def handle_exception(e):
     traceback.print_exc()
     return jsonify({"error": "An unexpected internal server error occurred.", "details": str(e)}), 500
 
-# --- API Endpoints ---
+import threading
+
+def process_file_in_background(filepath, user_id, upload_record_id, app):
+    with app.app_context():
+        try:
+            # 1. Parse PDF
+            students = parse_sppu_ledger(filepath)
+            
+            history_excel_path = os.path.join(app.config['GENERATED_FOLDER'], f'report_{upload_record_id}.xlsx')
+            
+            # 2. Generate and Save Excel 
+            df = generate_excel_from_data(students, history_excel_path)
+            
+            # FORCE CACHE INVALIDATION
+            _data_cache.clear()
+            
+            # 3. Save to Ledger History (DB)
+            upload_record = LedgerUpload.query.get(upload_record_id)
+            if upload_record and not df.empty:
+                upload_record.total_students = len(df)
+                upload_record.pass_count = len(df[df['status'] == 'Pass'])
+                upload_record.fail_count = len(df[df['status'] == 'Fail'])
+                db.session.commit()
+                
+                # Save parsed data to Relational DB Tables
+                try:
+                    save_ledger_data_to_db(students, upload_record.id, "2023-2024", "2")
+                except Exception as db_err:
+                    print(f"Error saving relational DB data: {db_err}")
+                    import traceback
+                    traceback.print_exc()
+
+        except Exception as e:
+            print(f"Error processing background PDF: {e}")
+            import traceback
+            traceback.print_exc()
 
 @app.route('/api/upload', methods=['POST'])
 @jwt_required()
@@ -185,64 +220,38 @@ def upload_ledger():
         try:
             file.save(filepath)
             
-            # 1. Parse PDF
-            students = parse_sppu_ledger(filepath)
-            
-            # Get current user identity BEFORE DB commit and excel generate
             current_user_id_str = get_jwt_identity()
             user_id = int(current_user_id_str) if current_user_id_str else None
 
-            # 2. Calculate initial stats directly to create the record first
-            # We don't generate excel to a shared path anymore!
-            
-            # We must create the upload record first to get the upload_record.id
+            # Create the upload record first so it exists in DB with 0 students
             upload_record = LedgerUpload(
                 filename=file.filename,
                 uploaded_by=user_id,
                 academic_year="2023-2024",
                 semester="2",
-                total_students=0,  # Will update after df calculation
+                total_students=0,
                 pass_count=0,
                 fail_count=0
             )
             db.session.add(upload_record)
-            db.session.flush() # Get ID without committing so it doesn't leave partial empty record on crash
+            db.session.commit() 
             
-            history_excel_path = os.path.join(app.config['GENERATED_FOLDER'], f'report_{upload_record.id}.xlsx')
-            
-            # 3. Generate and Save Excel (Sources of Truth) directly to tenant file
-            df = generate_excel_from_data(students, history_excel_path)
-            
-            # FORCE CACHE INVALIDATION: clear any memory holds on the previous dashboard data
-            _data_cache.clear()
-            
-            # 4. Save to Ledger History (DB)
-            if not df.empty:
-                upload_record.total_students = len(df)
-                upload_record.pass_count = len(df[df['status'] == 'Pass'])
-                upload_record.fail_count = len(df[df['status'] == 'Fail'])
-                
-                db.session.commit()
-                
-                # Save parsed data to Relational DB Tables
-                try:
-                    save_ledger_data_to_db(students, upload_record.id, "2023-2024", "2")
-                except Exception as db_err:
-                    print(f"Error saving relational DB data: {db_err}")
-                    traceback.print_exc()
-                    # We continue even if this fails to not break the existing flow abruptly,
-                    # but the error will be in the logs.
+            # Start background thread
+            thread = threading.Thread(target=process_file_in_background, args=(filepath, user_id, upload_record.id, app._get_current_object()))
+            thread.daemon = True
+            thread.start()
 
             return jsonify({
-                "message": "File processed successfully",
-                "students_processed": len(df),
+                "message": "File processing started in background",
+                "students_processed": 0,
                 "success": True,
-                "upload_id": upload_record.id if not df.empty else None
+                "upload_id": upload_record.id
             })
             
         except Exception as e:
-            print(f"Error processing PDF: {e}")
-            traceback.print_exc() # Critical for debugging
+            print(f"Error starting upload: {e}")
+            import traceback
+            traceback.print_exc()
             return jsonify({"error": str(e)}), 500
 
 @app.route('/api/history', methods=['GET'])

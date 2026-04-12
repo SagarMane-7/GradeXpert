@@ -265,32 +265,22 @@
                     
                     successMsg.innerHTML = `
                         <div style="text-align: center; padding: 25px;">
-                            <i class="fa-solid fa-wand-magic-sparkles fa-bounce" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 20px;"></i>
-                            <h3 style="color: var(--text-primary); font-size: 1.4rem; margin-bottom: 10px;">Ledger Synchronized & Converted!</h3>
-                            <p style="color: var(--text-secondary); margin-bottom: 25px;">The SPPU PDF has been transformed into an actionable analytics database.</p>
+                            <i class="fa-solid fa-server fa-bounce" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 20px;"></i>
+                            <h3 style="color: var(--text-primary); font-size: 1.4rem; margin-bottom: 10px;">Ledger Uploaded Successfully!</h3>
+                            <p style="color: var(--text-secondary); margin-bottom: 25px;">The document is now being crunch-processed in the background to avoid timeouts.</p>
                             
                             <div style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
-                                <div style="display: inline-flex; align-items: center; padding: 10px 20px; background: rgba(52, 199, 89, 0.1); border-radius: 99px; color: var(--success-color); font-weight: 500;">
-                                    <i class="fa-solid fa-file-excel" style="margin-right: 10px;"></i> Downloading Excel Output...
-                                </div>
                                 <div style="display: inline-flex; align-items: center; padding: 10px 20px; background: rgba(0, 122, 255, 0.1); border-radius: 99px; color: var(--primary-color); font-weight: 500;">
-                                    <i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 10px;"></i> Refreshing Global Dashboards...
+                                    <i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 10px;"></i> Please check the Dashboard in a minute...
                                 </div>
                             </div>
                         </div>
                     `;
                     successMsg.classList.add('fade-in');
 
-                    const iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    let downloadUrl = `${BASE_URL}/api/report/download?jwt=` + token;
-                    if (data.upload_id) {
-                        downloadUrl += '&upload_id=' + data.upload_id;
-                    }
-                    iframe.src = downloadUrl;
-                    document.body.appendChild(iframe);
-
-                    window.location.href = 'dashboard.html?refresh=' + new Date().getTime();
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html?refresh=' + new Date().getTime();
+                    }, 3000);
                 } else {
                     const errData = await response.json();
                     throw new Error(errData.msg || errData.error || 'Upload failed');

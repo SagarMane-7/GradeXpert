@@ -1,11 +1,7 @@
-# 🎓 SATYA-SETU: SPPU Academic Intelligence Dashboard & Ledger Parser
+# 🎓 GradeXpert: SPPU Academic Intelligence Dashboard & Ledger Parser
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
-![Flask](https://img.shields.io/badge/Flask-Framework-green)
-![Pandas](https://img.shields.io/badge/Data-Pandas-red)
-![License](https://img.shields.io/badge/License-MIT-purple)
 
-Welcome to **SATYA-SETU**, an intelligent, structured, and role-based Academic Intelligence Dashboard designed specifically for SPPU (Savitribai Phule Pune University). 
+Welcome to **GradeXpert**, an intelligent, structured, and role-based Academic Intelligence Dashboard designed specifically for SPPU (Savitribai Phule Pune University). 
 
 This README provides the **Ultimate Step-by-Step Guide** to open, configure, and seamlessly run this project in **Visual Studio Code (VS Code)** without any bugs or dependency issues.
 
@@ -103,18 +99,4 @@ Once the terminal reads `* Running on http://127.0.0.1:5000`, your server is suc
 
 ---
 
-## 🛑 Troubleshooting & Maintenance Guide
-
-- **Terminal says `python is not recognized`**: You must install Python from `python.org` and ensure "Add Python to PATH" is checked during installation.
-- **Port 5000 is already in use**: Another app is using this port. Close other background Python tasks, or configure Flask to use a different port like `5001`.
-- **VS Code Pylance/Import Warnings**: While the app runs fine, VS Code might show yellow squiggly lines. Press `Ctrl+Shift+P`, type `Python: Select Interpreter`, and select the one located in your `.venv` directory to sync the IDE with your libraries.
-
----
-
-## 🔐 System Architecture Flow
-
-1. **Authentication:** The secure login workflow issues JWT tokens on the frontend via `index.html`.
-2. **Uploading:** A PDF ledger is securely passed from the frontend to the Flask backend API.
-3. **Structuring:** `PyMuPDF` breaks down tables while skipping headers/footers, and `pandas` calculates class averages and fails.
-4. **Dashboard Data:** The dashboard components load dynamic `Chart.js` visual analytics based on immediate backend API requests and database reads.
-5. **Exports:** Deep integration with `fpdf2` and `openpyxl` allows instant automated downloading of comprehensive PDF and Excel reports.
+l reports.

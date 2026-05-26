@@ -88,15 +88,3 @@ cd backend
 ```bash
 python app.py
 ```
-
-### Step 8: View the Application
-Once the terminal reads `* Running on http://127.0.0.1:5000`, your server is successfully active!
-1. Hold `Ctrl` and **click the link** `http://127.0.0.1:5000` in the VS Code terminal.
-2. Your default web browser will open SATYA-SETU locally.
-3. Login using the default administrator credentials:
-   - **Username:** `admin`
-   - **Password:** `admin`
-
----
-
-l reports.

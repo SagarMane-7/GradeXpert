@@ -1,5 +1,4 @@
-# 🎓 GradeXpert: SPPU Academic Intelligence Dashboard & Ledger Parser
-
+# 🎓 GradeXpert
 
 Welcome to **GradeXpert**, an intelligent, structured, and role-based Academic Intelligence Dashboard designed specifically for SPPU (Savitribai Phule Pune University). 
 

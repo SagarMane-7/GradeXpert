@@ -1,9 +1,23 @@
+# Node.js dependencies
+node_modules/
+**/node_modules/
+frontend/dist/
+backend/uploads/*
+
+# Python
+.venv/
+venv/
 __pycache__/
 *.pyc
-.vscode/
-.venv/
+*.pyo
+*.pyd
+
+# Configurations
 .env
-*.log
-instance/
-uploads/*
+.env.local
+
+# Generated files
 generated/*
+*.log
+.vscode/
+instance/

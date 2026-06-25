@@ -1,89 +1,57 @@
-# 🎓 GradeXpert
+# GradeXpert: Student Performance Analysis & SPPU Ledger Parser Platform
 
-Welcome to **GradeXpert**, an intelligent, structured, and role-based Academic Intelligence Dashboard designed specifically for SPPU (Savitribai Phule Pune University). 
-
-This README provides the **Ultimate Step-by-Step Guide** to open, configure, and seamlessly run this project in **Visual Studio Code (VS Code)** without any bugs or dependency issues.
+An enterprise-grade, microservice-based web application for automated Pune University (SPPU) Ledger PDF parsing, department-wise academic metrics evaluation, and student rank analysis developed for the Pune Institute of Computer Technology (PICT) faculty.
 
 ---
 
-## 🛠️ The Technology Stack & Dependencies
-
-To guarantee this project runs without any bugs, the environment relies on the exact libraries listed in your `requirements.txt` and modern frontend standards. Here are the core engines used:
-
-### Frontend Technologies
-| Component | Technology | Purpose |
-| :--- | :--- | :--- |
-| **Core UI** | HTML5, CSS3, Vanilla JS | Builds a responsive, glassmorphic, and dynamic user interface. |
-| **Data Visualization** | `Chart.js` | Renders interactive trend line charts and pie charts for dashboard analytics. |
-| **Typography & Icons** | `FontAwesome`, `Google Fonts (Inter)` | Provides modern, scalable icons and beautiful typography. |
-
-### Backend & Data Processing
-| Component | Library/Technology | Purpose |
-| :--- | :--- | :--- |
-| **Backend Core** | `Flask`, `Werkzeug` | Powers the server API and handles HTTP requests securely. |
-| **Data Parsing** | `PyMuPDF` (`pymupdf`), `pypdfium2` | Rapidly and accurately reads the complex layout of SPPU PDF ledger files. |
-| **Data Analysis** | `pandas`, `numpy`, `openpyxl` | Cleans data, calculates averages, identifies failures, and exports to Excel. |
-| **Database** | `SQLAlchemy`, `psycopg2-binary` | Flexible ORM supporting SQLite locally and PostgreSQL in production. |
-| **Security** | `Flask-JWT-Extended`, `Flask-CORS` | Provides secure token-based authentication and cross-origin resource sharing. |
-| **PDF Generation** | `fpdf2` | Dynamically generates structured PDF analytical reports for download. |
-| **Deployment** | `gunicorn`, `python-dotenv` | Robust WSGI HTTP server for production deployment and environment management. |
+## Executive Summary
+GradeXpert empowers college administrators, HODs, and faculty members with real-time academic analysis of student batches. By uploading standard university ledger PDFs, the platform dynamically parses thousands of lines of code, extracts individual component marks (Insem, ESE, Term Work, Oral/Practical), and aggregates statistical metrics (total processed, passed count, failed count, pass percentage, toppers lists) without manual data entry.
 
 ---
 
-## 🚀 How to Run the Project in VS Code (Step-by-Step Plan)
+## System Architecture
 
-Follow these exact instructions to launch SATYA-SETU perfectly on your local machine using Visual Studio Code.
+The application is structured into decoupled microservices:
 
-### Step 1: Open the Project in VS Code
-1. Open **Visual Studio Code**.
-2. Go to **File** > **Open Folder...** (or press `Ctrl+K` then `Ctrl+O`).
-3. Select the folder named `frontend sppu` (or `frontend sppu - Copy (2)` depending on your current directory name), and click **Select Folder**.
-
-### Step 2: Open a VS Code Terminal
-1. In the top VS Code menu bar, click on **Terminal** > **New Terminal** (or press `` Ctrl + ` ``).
-2. Ensure you are at the root level of your project directory in this terminal.
-
-### Step 3: Create a Virtual Environment (Crucial against Bugs)
-To prevent your global Python packages from crashing this app, always use a virtual environment. In the terminal, type:
-
-```bash
-python -m venv .venv
+```
+                  +-----------------------------------+
+                  |          React Frontend           |
+                  |     (Executive Dashboard)         |
+                  +-----------------+-----------------+
+                                    |
+                                    | HTTP / JSON (Port 3000)
+                                    v
+                  +-----------------+-----------------+
+                  |       Node.js Express Gateway     |
+                  +--------+-----------------+--------+
+                           |                 |
+          Logs records     |                 | Proxy parse request (Port 5001)
+          & auth metrics   v                 v
+                  +--------+--------+  +-----+-----------------+
+                  |  MySQL Database |  |  Python Flask Parser  |
+                  | (Relational Store) |  |  (PyMuPDF & Pandas)   |
+                  +-----------------+  +-----------------------+
+                                                 (Port 5002)
 ```
 
-### Step 4: Activate the Virtual Environment
-Activate the environment so that VS Code knows where to install the packages.
+### Component Breakdown
+* **Executive Dashboard (frontend/)**: Single Page Application (SPA) built using Vite and React, styled with a premium slate-blue CSS grid system.
+* **API Gateway Proxy (backend/)**: Node Express server executing route handling, JWT role management (Admin, HOD, Faculty), database persistence, and file management.
+* **Relational Persistence Store (MySQL)**: Organizes normalized tables for branch departments, subjects, students, component grades, and history logs.
+* **Analytical Python Service (ml/)**: Python Flask engine utilizing `PyMuPDF` (fitz) layout-preserving text extraction and `pandas` dataframes to parse PDF inputs and compile structured Excel spreadsheets.
 
-**For Windows (Command Prompt / PowerShell):**
-```bash
-.venv\Scripts\activate
-```
-*(You will see `(.venv)` prefix your terminal bracket when it works).*
+---
 
-### Step 5: Install Required Dependencies
-With the virtual environment active, run the following command to download all exact dependencies needed to run the app cleanly:
+## Functional Specifications
 
-```bash
-pip install -r requirements.txt
-```
-*Wait a few seconds for all packages (like Flask, Pandas, pdfplumber) to install successfully.*
+### 1. Automated SPPU Ledger PDF Parsing
+Faculty can drag and drop a standard SPPU student result ledger PDF. The Python service extracts text coordinates horizontally to bypass PDF alignment issues, parses subject codes/names, maps term components, and generates a structured Excel spreadsheet with branch sheets and subjectwise summaries.
 
-### Step 6: Configure Security Variables
-The application needs a secure key for login functionality. 
-1. Look at your file explorer on the left sidebar in VS Code.
-2. If there is no `.env` file, click **New File**, name it `.env`.
-3. Add the following line to the `.env` file and save it (`Ctrl+S`):
-```env
-JWT_SECRET=super-secret-sppu-key-2026
-```
+### 2. Department & Branch Performance Analytics
+HODs can monitor branch-level performance. The dashboard computes pass percentages, approximate average marks, and lists the toppers in each engineering discipline (Computer Engineering, IT, E&TC, AI&DS).
 
-### Step 7: Launch the Application
-Start the backend server which automatically serves your database and dashboard interfaces.
+### 3. Student Rankings & Merit List
+Displays a real-time list of top-performing students across the college sorted by SGPA, equipped with a fuzzy search system to filter students instantly by name or seat number.
 
-1. First, navigate into the backend folder:
-```bash
-cd backend
-```
-2. Next, securely run the Flask server:
-```bash
-python app.py
-```
+### 4. Backlog Tracking & Audit Logs
+Faculty can view a list of failed students to diagnose specific semester backlog stats. The upload history is maintained in the MySQL database, allowing professors to download generated Excel worksheets or clear outdated ledger batches cleanly.
